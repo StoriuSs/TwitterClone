@@ -1,16 +1,18 @@
 import express from 'express'
+import { PORT } from './configs/env.config'
+import databaseService from './services/database.services'
+import usersRouter from '~/routes/users.routes'
+import { errorHandler } from './middlewares/errors.middlewares'
+
 const app = express()
-const port = 3000
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+databaseService.connect()
 
-const sum = (obj: { a: number; b: number }) => {
-    console.log(obj)
-    return obj.a + obj.b
-}
-
-app.get('/', (req, res) => {
-    res.send(`Hello World! The sum is: ${sum({ a: 5, b: 10 })}`)
-})
-
-app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`)
+// Routes
+app.use('/api/users', usersRouter)
+// Error handling middleware
+app.use(errorHandler)
+app.listen(PORT, () => {
+    console.log(`Example app listening on port ${PORT}`)
 })

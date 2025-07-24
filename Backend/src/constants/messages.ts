@@ -1,0 +1,26 @@
+export const userMessages = {
+    validationError: 'Validation failed',
+    nameIsRequired: 'Name is required',
+    nameMustBeString: 'Name must be a string',
+    nameLength: 'Name must be between 2 and 100 characters long',
+    emailIsRequired: 'Email is required',
+    emailAlreadyExists: 'Email already in use',
+    emailInvalid: 'Invalid email format',
+    passwordIsRequired: 'Password is required',
+    passwordMustBeString: 'Password must be a string',
+    passwordLength: 'Password must be between 6 and 60 characters long',
+    passwordStrong:
+        'Password must contain at least one lowercase letter, one uppercase letter, one number, and one symbol',
+    confirmPasswordIsRequired: 'Confirm password is required',
+    confirmPasswordMustBeString: 'Confirm password must be a string',
+    confirmPasswordLength: 'Confirm password must be between 6 and 60 characters long',
+    confirmPasswordStrong:
+        'Confirm password must contain at least one lowercase letter, one uppercase letter, one number, and one symbol',
+    passwordsMustMatch: 'Passwords must match',
+    invalidCredentials: 'Invalid email or password',
+    dayOfBirthMustBeISO8601: 'Date of birth must be a valid ISO8601 date',
+    userNotFound: 'User not found',
+    userCreated: 'User created successfully',
+    userUpdated: 'User updated successfully',
+    userDeleted: 'User deleted successfully'
+}
