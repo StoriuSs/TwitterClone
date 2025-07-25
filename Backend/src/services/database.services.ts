@@ -1,6 +1,7 @@
 import { Collection, Db, MongoClient, ServerApiVersion } from 'mongodb'
 import { MONGODB_URI } from '../configs/env.config'
 import User from '../models/schemas/User.schema'
+import RefreshToken from '~/models/schemas/RefreshToken.schema'
 
 const uri = MONGODB_URI
 
@@ -35,6 +36,10 @@ class DatabaseService {
 
     get users(): Collection<User> {
         return this.db.collection('users')
+    }
+
+    get refreshTokens(): Collection<RefreshToken> {
+        return this.db.collection('refresh_tokens')
     }
 }
 

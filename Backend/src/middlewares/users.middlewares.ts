@@ -2,8 +2,10 @@ import { checkSchema } from 'express-validator'
 import httpStatus from '~/constants/httpStatus'
 import { userMessages } from '~/constants/messages'
 import { ErrorsWithStatus } from '~/models/Errors'
+import databaseService from '~/services/database.services'
 import usersService from '~/services/users.services'
 import { validate } from '~/utils/validation'
+import { comparePasswords } from '~/utils/hash'
 
 export const registerValidator = validate(
     checkSchema({
@@ -95,6 +97,50 @@ export const registerValidator = validate(
             isISO8601: {
                 options: { strict: true, strictSeparator: true },
                 errorMessage: userMessages.dayOfBirthMustBeISO8601
+            }
+        }
+    })
+)
+
+export const loginValidator = validate(
+    checkSchema({
+        email: {
+            in: ['body'],
+            notEmpty: {
+                errorMessage: userMessages.emailIsRequired
+            },
+            isEmail: {
+                errorMessage: userMessages.emailInvalid
+            },
+            normalizeEmail: true,
+            trim: true,
+            custom: {
+                options: async (value, { req }) => {
+                    const user = await databaseService.users.findOne({
+                        email: value
+                    })
+                    // If user is not found, throw an error
+                    if (user === null) {
+                        throw new ErrorsWithStatus(userMessages.userNotFound, httpStatus.UNPROCESSABLE_ENTITY)
+                    }
+                    // If password does not match, throw an error
+                    const isMatch = await comparePasswords(req.body.password, user.password)
+                    if (isMatch === false) {
+                        throw new ErrorsWithStatus(userMessages.passwordIncorrect, httpStatus.UNPROCESSABLE_ENTITY)
+                    }
+                    // If user is valid, attach user to request object
+                    req.user = user
+                    return true
+                }
+            }
+        },
+        password: {
+            in: ['body'],
+            notEmpty: {
+                errorMessage: userMessages.passwordIsRequired
+            },
+            isString: {
+                errorMessage: userMessages.passwordMustBeString
             }
         }
     })

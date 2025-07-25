@@ -17,10 +17,11 @@ export const userMessages = {
     confirmPasswordStrong:
         'Confirm password must contain at least one lowercase letter, one uppercase letter, one number, and one symbol',
     passwordsMustMatch: 'Passwords must match',
-    invalidCredentials: 'Invalid email or password',
+    passwordIncorrect: 'Password is incorrect',
     dayOfBirthMustBeISO8601: 'Date of birth must be a valid ISO8601 date',
     userNotFound: 'User not found',
-    userCreated: 'User created successfully',
+    userRegistered: 'User registered successfully',
+    userLoggedIn: 'User logged in successfully',
     userUpdated: 'User updated successfully',
     userDeleted: 'User deleted successfully'
 }
