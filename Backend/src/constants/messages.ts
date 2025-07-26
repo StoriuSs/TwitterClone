@@ -22,6 +22,12 @@ export const userMessages = {
     userNotFound: 'User not found',
     userRegistered: 'User registered successfully',
     userLoggedIn: 'User logged in successfully',
+    userLoggedOut: 'User logged out successfully',
     userUpdated: 'User updated successfully',
-    userDeleted: 'User deleted successfully'
+    userDeleted: 'User deleted successfully',
+    accessTokenRequired: 'Access token is required',
+    accessTokenMustBeString: 'Access token must be a string',
+    refreshTokenRequired: 'Refresh token is required',
+    refreshTokenMustBeString: 'Refresh token must be a string',
+    refreshTokenInvalid: 'Refresh token is expired or not found'
 }

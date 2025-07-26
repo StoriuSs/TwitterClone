@@ -6,6 +6,8 @@ import databaseService from '~/services/database.services'
 import usersService from '~/services/users.services'
 import { validate } from '~/utils/validation'
 import { comparePasswords } from '~/utils/hash'
+import { verifyToken } from '~/utils/jwt'
+import { Request } from 'express'
 
 export const registerValidator = validate(
     checkSchema({
@@ -141,6 +143,64 @@ export const loginValidator = validate(
             },
             isString: {
                 errorMessage: userMessages.passwordMustBeString
+            }
+        }
+    })
+)
+
+export const accessTokenValidator = validate(
+    checkSchema({
+        Authorization: {
+            in: ['headers'],
+            notEmpty: {
+                errorMessage: userMessages.accessTokenRequired
+            },
+            isString: {
+                errorMessage: userMessages.accessTokenMustBeString
+            },
+            trim: true,
+            custom: {
+                options: async (value: string, { req }) => {
+                    const access_token = value.split(' ')[1] || ''
+                    if (access_token === '') {
+                        throw new ErrorsWithStatus(userMessages.accessTokenRequired, httpStatus.UNAUTHORIZED)
+                    }
+
+                    const decoded_authorization = await verifyToken(access_token)
+                    req.decoded_authorization = decoded_authorization
+                    return true
+                }
+            }
+        }
+    })
+)
+
+export const refreshTokenValidator = validate(
+    checkSchema({
+        refresh_token: {
+            in: ['headers'],
+            notEmpty: {
+                errorMessage: userMessages.refreshTokenRequired
+            },
+            isString: {
+                errorMessage: userMessages.refreshTokenMustBeString
+            },
+            trim: true,
+            custom: {
+                options: async (value: string, { req }) => {
+                    if (value === '') {
+                        throw new ErrorsWithStatus(userMessages.refreshTokenRequired, httpStatus.UNAUTHORIZED)
+                    }
+
+                    const refresh_token = await databaseService.refreshTokens.findOne({ token: value })
+                    if (refresh_token === null) {
+                        throw new ErrorsWithStatus(userMessages.refreshTokenInvalid, httpStatus.UNAUTHORIZED)
+                    }
+
+                    const decoded_refresh_token = await verifyToken(value)
+                    ;(req as Request).decoded_refresh_token = decoded_refresh_token
+                    return true
+                }
             }
         }
     })

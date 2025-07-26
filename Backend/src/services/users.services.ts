@@ -7,6 +7,7 @@ import { TokenType } from '~/constants/enum'
 import { JWT_ACCESS_TOKEN_EXPIRATION, JWT_REFRESH_TOKEN_EXPIRATION } from '~/configs/env.config'
 import { ObjectId } from 'mongodb'
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
+import { userMessages } from '~/constants/messages'
 
 class UsersService {
     private signAccessToken(user_id: string) {
@@ -78,6 +79,15 @@ class UsersService {
         return {
             access_token,
             refresh_token
+        }
+    }
+
+    async logout(refresh_token: string) {
+        await databaseService.refreshTokens.deleteOne({
+            token: refresh_token
+        })
+        return {
+            message: userMessages.userLoggedOut
         }
     }
 }

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import usersService from '~/services/users.services'
 import { ParamsDictionary } from 'express-serve-static-core'
-import { RegisterReqBody } from '~/models/requests/User.requests'
+import { LogoutReqBody, RegisterReqBody } from '~/models/requests/User.requests'
 import User from '~/models/schemas/User.schema'
 import { userMessages } from '~/constants/messages'
 
@@ -21,4 +21,10 @@ export const loginController = async (req: Request, res: Response) => {
         message: userMessages.userLoggedIn,
         result
     })
+}
+
+export const logoutController = async (req: Request<ParamsDictionary, any, LogoutReqBody>, res: Response) => {
+    const refresh_token = req.headers['refresh_token'] as string
+    const result = await usersService.logout(refresh_token)
+    return res.json(result)
 }
