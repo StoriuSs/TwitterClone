@@ -178,7 +178,7 @@ export const accessTokenValidator = validate(
 export const refreshTokenValidator = validate(
     checkSchema({
         refresh_token: {
-            in: ['headers'],
+            in: ['cookies'],
             notEmpty: {
                 errorMessage: userMessages.refreshTokenRequired
             },
@@ -191,8 +191,9 @@ export const refreshTokenValidator = validate(
                     if (value === '') {
                         throw new ErrorsWithStatus(userMessages.refreshTokenRequired, httpStatus.UNAUTHORIZED)
                     }
-
+                    console.log(value)
                     const refresh_token = await databaseService.refreshTokens.findOne({ token: value })
+                    console.log(refresh_token)
                     if (refresh_token === null) {
                         throw new ErrorsWithStatus(userMessages.refreshTokenInvalid, httpStatus.UNAUTHORIZED)
                     }
