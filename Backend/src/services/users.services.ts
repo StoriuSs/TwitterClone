@@ -53,17 +53,17 @@ class UsersService {
             })
         )
         const user_id = result.insertedId.toString()
-        const [accessToken, refreshToken] = await this.signBothTokens(user_id)
+        const [access_token, refresh_token] = await this.signBothTokens(user_id)
         // Store the refresh token in the database
         await databaseService.refreshTokens.insertOne(
             new RefreshToken({
-                token: refreshToken,
+                token: refresh_token,
                 user_id: new ObjectId(user_id)
             })
         )
         return {
-            accessToken,
-            refreshToken
+            access_token,
+            refresh_token
         }
     }
 
