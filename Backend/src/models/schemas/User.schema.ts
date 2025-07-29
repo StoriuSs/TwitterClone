@@ -9,7 +9,7 @@ interface UserType {
     password: string
     created_at?: Date
     updated_at?: Date
-    email_verify_token?: string // jwt or empty string if email is verified
+    email_verify_token?: string // random token or empty string if email is verified
     forgot_password_token?: string // jwt or empty string if not requested
     verify?: UserVerifyStatus
 

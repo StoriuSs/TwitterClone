@@ -8,6 +8,7 @@ import { validate } from '~/utils/validation'
 import { comparePasswords } from '~/utils/hash'
 import { verifyToken } from '~/utils/jwt'
 import { Request } from 'express'
+import { JWT_ACCESS_TOKEN_SECRET_KEY, JWT_REFRESH_TOKEN_SECRET_KEY } from '~/configs/env.config'
 
 export const registerValidator = validate(
     checkSchema({
@@ -166,7 +167,7 @@ export const accessTokenValidator = validate(
                         throw new ErrorsWithStatus(userMessages.accessTokenRequired, httpStatus.UNAUTHORIZED)
                     }
 
-                    const decoded_authorization = await verifyToken(access_token)
+                    const decoded_authorization = await verifyToken(access_token, JWT_ACCESS_TOKEN_SECRET_KEY as string)
                     req.decoded_authorization = decoded_authorization
                     return true
                 }
@@ -191,15 +192,42 @@ export const refreshTokenValidator = validate(
                     if (value === '') {
                         throw new ErrorsWithStatus(userMessages.refreshTokenRequired, httpStatus.UNAUTHORIZED)
                     }
-                    console.log(value)
                     const refresh_token = await databaseService.refreshTokens.findOne({ token: value })
-                    console.log(refresh_token)
                     if (refresh_token === null) {
                         throw new ErrorsWithStatus(userMessages.refreshTokenInvalid, httpStatus.UNAUTHORIZED)
                     }
 
-                    const decoded_refresh_token = await verifyToken(value)
+                    const decoded_refresh_token = await verifyToken(value, JWT_REFRESH_TOKEN_SECRET_KEY as string)
                     ;(req as Request).decoded_refresh_token = decoded_refresh_token
+                    return true
+                }
+            }
+        }
+    })
+)
+
+export const emailVerifyTokenValidator = validate(
+    checkSchema({
+        email_verify_token: {
+            in: ['body'],
+            notEmpty: {
+                errorMessage: userMessages.emailVerifyTokenRequired
+            },
+            isString: {
+                errorMessage: userMessages.emailVerifyTokenMustBeString
+            },
+            trim: true,
+            custom: {
+                options: async (value: string, { req }) => {
+                    if (value === '') {
+                        throw new ErrorsWithStatus(userMessages.emailVerifyTokenRequired, httpStatus.UNAUTHORIZED)
+                    }
+                    // Find user by token
+                    const user = await databaseService.users.findOne({ email_verify_token: value })
+                    if (!user) {
+                        throw new ErrorsWithStatus(userMessages.emailVerifyTokenInvalid, httpStatus.UNAUTHORIZED)
+                    }
+                    req.user = user
                     return true
                 }
             }

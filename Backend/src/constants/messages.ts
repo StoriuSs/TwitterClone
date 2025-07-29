@@ -6,6 +6,9 @@ export const userMessages = {
     emailIsRequired: 'Email is required',
     emailAlreadyExists: 'Email already in use',
     emailInvalid: 'Invalid email format',
+    emailAlreadyVerified: 'Email is already verified',
+    emailVerifyEmailResent: 'Email verification resent successfully',
+    emailVerifiedSuccessfully: 'Email verified successfully',
     passwordIsRequired: 'Password is required',
     passwordMustBeString: 'Password must be a string',
     passwordLength: 'Password must be between 6 and 60 characters long',
@@ -29,5 +32,8 @@ export const userMessages = {
     accessTokenMustBeString: 'Access token must be a string',
     refreshTokenRequired: 'Refresh token is required',
     refreshTokenMustBeString: 'Refresh token must be a string',
-    refreshTokenInvalid: 'Refresh token is expired or not found'
+    refreshTokenInvalid: 'Refresh token is expired or not found',
+    emailVerifyTokenRequired: 'Email verification token is required',
+    emailVerifyTokenMustBeString: 'Email verification token must be a string',
+    emailVerifyTokenInvalid: 'Email verification token is invalid, expired or the user is already verified'
 }

@@ -1,10 +1,17 @@
 import jwt from 'jsonwebtoken'
-import { JWT_SECRET_KEY } from '~/configs/env.config'
 import httpStatus from '~/constants/httpStatus'
 import { ErrorsWithStatus } from '~/models/Errors'
 import { TokenPayload } from '~/models/requests/User.requests'
 
-export const signToken = ({ payload, options }: { payload: any; options?: jwt.SignOptions }) => {
+export const signToken = ({
+    payload,
+    JWT_SECRET_KEY,
+    options
+}: {
+    payload: any
+    JWT_SECRET_KEY: string
+    options?: jwt.SignOptions
+}) => {
     try {
         return jwt.sign(payload, JWT_SECRET_KEY as string, options)
     } catch (error) {
@@ -13,9 +20,9 @@ export const signToken = ({ payload, options }: { payload: any; options?: jwt.Si
     }
 }
 
-export const verifyToken = (token: string): TokenPayload => {
+export const verifyToken = (token: string, JWT_SECRET_KEY: string): TokenPayload => {
     try {
-        return jwt.verify(token, JWT_SECRET_KEY as string) as TokenPayload
+        return jwt.verify(token, JWT_SECRET_KEY) as TokenPayload
     } catch (error: any) {
         throw new ErrorsWithStatus(error.message, httpStatus.UNAUTHORIZED)
     }
