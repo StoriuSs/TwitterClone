@@ -27,3 +27,11 @@ export const verifyToken = (token: string, JWT_SECRET_KEY: string): TokenPayload
         throw new ErrorsWithStatus(error.message, httpStatus.UNAUTHORIZED)
     }
 }
+
+export const decodeToken = (token: string): TokenPayload => {
+    try {
+        return jwt.decode(token) as TokenPayload
+    } catch (error: any) {
+        throw new ErrorsWithStatus(error.message, httpStatus.UNAUTHORIZED)
+    }
+}

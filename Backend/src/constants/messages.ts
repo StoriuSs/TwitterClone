@@ -34,6 +34,7 @@ export const userMessages = {
     refreshTokenRequired: 'Refresh token is required',
     refreshTokenMustBeString: 'Refresh token must be a string',
     refreshTokenInvalid: 'Refresh token is expired or not found',
+    refreshTokenSuccess: 'Refresh token successfully',
     emailVerifyTokenRequired: 'Email verification token is required',
     emailVerifyTokenMustBeString: 'Email verification token must be a string',
     emailVerifyTokenInvalid: 'Email verification token is invalid, expired or the user is already verified',

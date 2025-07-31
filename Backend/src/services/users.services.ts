@@ -2,7 +2,7 @@ import databaseService from '~/services/database.services'
 import User from '~/models/schemas/User.schema'
 import { RegisterReqBody } from '~/models/requests/User.requests'
 import { hashPassword } from '~/utils/hash'
-import { signToken } from '~/utils/jwt'
+import { decodeToken, signToken } from '~/utils/jwt'
 import { TokenType, UserVerifyStatus } from '~/constants/enum'
 import {
     JWT_ACCESS_TOKEN_EXPIRATION,
@@ -201,6 +201,47 @@ class UsersService {
         )
         return {
             message: userMessages.resetPasswordSuccess
+        }
+    }
+
+    async refreshToken(refresh_token: string, user_id: string) {
+        // Decode old refresh token to get exp
+        const decoded_refresh_token = decodeToken(refresh_token)
+        if (!decoded_refresh_token?.exp) {
+            throw new Error('Invalid refresh token')
+        }
+        // Get current time in seconds to calculate the remaining expiration time
+        const now = Math.floor(Date.now() / 1000)
+        const expiresIn = decoded_refresh_token.exp - now
+        if (expiresIn <= 0) {
+            throw new Error('Refresh token expired')
+        }
+        // Sign new tokens
+        const new_access_token = await this.signAccessToken(user_id)
+        const new_refresh_token = signToken({
+            payload: {
+                user_id,
+                token_type: TokenType.RefreshToken
+            },
+            JWT_SECRET_KEY: JWT_REFRESH_TOKEN_SECRET_KEY as string,
+            options: {
+                expiresIn
+            }
+        })
+        // Update the refresh token in DB
+        await databaseService.refreshTokens.updateOne(
+            { token: refresh_token },
+            {
+                $set: {
+                    token: new_refresh_token
+                },
+                $currentDate: { updated_at: true }
+            }
+        )
+        return {
+            new_access_token,
+            new_refresh_token,
+            expiresIn // in seconds
         }
     }
 

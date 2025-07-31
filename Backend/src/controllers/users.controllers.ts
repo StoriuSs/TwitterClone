@@ -114,6 +114,26 @@ export const resetPasswordController = async (req: Request, res: Response) => {
     return res.json(result)
 }
 
+export const refreshTokenController = async (req: Request, res: Response) => {
+    const refresh_token = req.cookies.refresh_token
+    const { user_id } = req.decoded_refresh_token as TokenPayload
+    const { new_access_token, new_refresh_token, expiresIn } = await usersService.refreshToken(refresh_token, user_id)
+    res.cookie('refresh_token', new_refresh_token, {
+        httpOnly: true,
+        secure: NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: expiresIn * 1000 // convert to milliseconds
+    })
+    return res.json({
+        message: userMessages.refreshTokenSuccess,
+        result: {
+            access_token: new_access_token,
+            // THIS IS FOR TESTING PURPOSES, THE REFRESH TOKEN IS STORED IN A HTTP-ONLY COOKIE
+            refresh_token: new_refresh_token
+        }
+    })
+}
+
 export const aboutMeController = async (req: Request, res: Response) => {
     const { user_id } = req.decoded_authorization as TokenPayload
     const user = await usersService.getMe(user_id)

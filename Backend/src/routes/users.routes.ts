@@ -19,7 +19,8 @@ import {
     forgotPasswordController,
     verifyForgotPasswordController,
     resetPasswordController,
-    aboutMeController
+    aboutMeController,
+    refreshTokenController
 } from '~/controllers/users.controllers'
 
 const usersRouter = Router()
@@ -35,6 +36,7 @@ usersRouter.get(
     wrapRequestHandler(verifyForgotPasswordController)
 )
 usersRouter.post('/reset-password', resetPasswordValidator, wrapRequestHandler(resetPasswordController))
+usersRouter.post('/refresh-token', refreshTokenValidator, wrapRequestHandler(refreshTokenController))
 usersRouter.get('/about-me', accessTokenValidator, wrapRequestHandler(aboutMeController))
 
 export default usersRouter

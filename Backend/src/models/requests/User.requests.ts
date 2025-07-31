@@ -14,6 +14,7 @@ export interface LogoutReqBody {
 export interface TokenPayload extends JwtPayload {
     user_id: string
     token_type: string
+    exp?: number
 }
 
 export interface ForgotPasswordReqBody {
