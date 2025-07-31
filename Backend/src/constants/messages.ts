@@ -26,6 +26,7 @@ export const userMessages = {
     userRegistered: 'User registered successfully',
     userLoggedIn: 'User logged in successfully',
     userLoggedOut: 'User logged out successfully',
+    userRetrievedSuccessfully: 'User retrieved successfully',
     userUpdated: 'User updated successfully',
     userDeleted: 'User deleted successfully',
     accessTokenRequired: 'Access token is required',
@@ -35,5 +36,13 @@ export const userMessages = {
     refreshTokenInvalid: 'Refresh token is expired or not found',
     emailVerifyTokenRequired: 'Email verification token is required',
     emailVerifyTokenMustBeString: 'Email verification token must be a string',
-    emailVerifyTokenInvalid: 'Email verification token is invalid, expired or the user is already verified'
+    emailVerifyTokenInvalid: 'Email verification token is invalid, expired or the user is already verified',
+    forgotPasswordEmailSent: 'Forgot password email sent successfully',
+    forgotPasswordEmailRequired: 'Forgot password email is required',
+    forgotPasswordEmailInvalid: 'Forgot password email must be a valid email address',
+    forgotPasswordTokenRequired: 'Forgot password token is required',
+    forgotPasswordTokenMustBeString: 'Forgot password token must be a string',
+    forgotPasswordTokenInvalid: 'Forgot password token is invalid, expired or the user is not found',
+    forgotPasswordTokenVerified: 'Forgot password token verified successfully',
+    resetPasswordSuccess: 'Reset password successfully'
 }

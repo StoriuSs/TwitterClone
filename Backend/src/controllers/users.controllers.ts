@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import usersService from '~/services/users.services'
 import { ParamsDictionary } from 'express-serve-static-core'
-import { LogoutReqBody, RegisterReqBody, TokenPayload } from '~/models/requests/User.requests'
+import { ForgotPasswordReqBody, LogoutReqBody, RegisterReqBody, TokenPayload } from '~/models/requests/User.requests'
 import User from '~/models/schemas/User.schema'
 import { userMessages } from '~/constants/messages'
 import { NODE_ENV } from '~/configs/env.config'
@@ -65,11 +65,6 @@ export const logoutController = async (req: Request<ParamsDictionary, any, Logou
 export const emailVerifyController = async (req: Request, res: Response) => {
     const user = req.user as User
     const user_id = user._id.toString()
-
-    if (!user) {
-        return res.status(httpStatus.NOT_FOUND).json({ message: userMessages.userNotFound })
-    }
-
     const result = await usersService.verifyEmail(user_id)
     res.json({
         message: userMessages.emailVerifiedSuccessfully,
@@ -90,4 +85,40 @@ export const resendEmailVerifyController = async (req: Request, res: Response) =
 
     const result = await usersService.resendVerifyEmail(user_id)
     return res.json(result)
+}
+
+export const forgotPasswordController = async (
+    req: Request<ParamsDictionary, any, ForgotPasswordReqBody>,
+    res: Response
+) => {
+    const { email } = req.body
+    if (!email) {
+        return res.status(httpStatus.BAD_REQUEST).json({ message: userMessages.emailIsRequired })
+    }
+    const result = await usersService.forgotPassword(email)
+    return res.json(result)
+}
+
+export const verifyForgotPasswordController = async (req: Request, res: Response) => {
+    // const user = req.user as User
+    // const user_id = user._id.toString()
+    // const result = await usersService.verifyForgotPasswordToken(user_id)
+    return res.json({
+        message: userMessages.forgotPasswordTokenVerified
+    })
+}
+
+export const resetPasswordController = async (req: Request, res: Response) => {
+    const { forgot_password_token, password } = req.body
+    const result = await usersService.resetPassword(forgot_password_token, password)
+    return res.json(result)
+}
+
+export const aboutMeController = async (req: Request, res: Response) => {
+    const { user_id } = req.decoded_authorization as TokenPayload
+    const user = await usersService.getMe(user_id)
+    return res.json({
+        message: userMessages.userRetrievedSuccessfully,
+        result: user
+    })
 }

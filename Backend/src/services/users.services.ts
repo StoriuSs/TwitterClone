@@ -8,7 +8,9 @@ import {
     JWT_ACCESS_TOKEN_EXPIRATION,
     JWT_ACCESS_TOKEN_SECRET_KEY,
     JWT_REFRESH_TOKEN_SECRET_KEY,
-    JWT_REFRESH_TOKEN_EXPIRATION
+    JWT_REFRESH_TOKEN_EXPIRATION,
+    JWT_FORGOT_PASSWORD_TOKEN_SECRET_KEY,
+    JWT_FORGOT_PASSWORD_TOKEN_EXPIRATION
 } from '~/configs/env.config'
 import { ObjectId } from 'mongodb'
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
@@ -43,6 +45,19 @@ class UsersService {
 
     private signBothTokens(user_id: string) {
         return Promise.all([this.signAccessToken(user_id), this.signRefreshToken(user_id)])
+    }
+
+    private signForgotPasswordToken(email: string) {
+        return signToken({
+            payload: {
+                email,
+                token_type: TokenType.ForgotPasswordToken
+            },
+            JWT_SECRET_KEY: JWT_FORGOT_PASSWORD_TOKEN_SECRET_KEY as string,
+            options: {
+                expiresIn: JWT_FORGOT_PASSWORD_TOKEN_EXPIRATION as any
+            }
+        })
     }
 
     async emailExists(email: string) {
@@ -136,6 +151,75 @@ class UsersService {
             message: userMessages.emailVerifyEmailResent,
             email_verify_token
         }
+    }
+
+    async forgotPassword(email: string) {
+        const forgot_password_token = this.signForgotPasswordToken(email)
+        await databaseService.users.updateOne(
+            { email: email },
+            {
+                $set: {
+                    forgot_password_token
+                },
+                $currentDate: { updated_at: true }
+            }
+        )
+        // Here we would typically send the email with the token
+        // For now, we just return the message for testing purposes
+        return {
+            message: userMessages.forgotPasswordEmailSent,
+            forgot_password_token
+        }
+    }
+
+    // async verifyForgotPasswordToken(user_id: string) {
+    //     await databaseService.users.updateOne(
+    //         { _id: new ObjectId(user_id) },
+    //         {
+    //             $set: {
+    //                 forgot_password_token: ''
+    //             },
+    //             $currentDate: { updated_at: true }
+    //         }
+    //     )
+    //     return {
+    //         message: userMessages.forgotPasswordTokenVerified
+    //     }
+    // }
+
+    async resetPassword(forgot_password_token: string, password: string) {
+        const hashedPassword = await hashPassword(password)
+        await databaseService.users.updateOne(
+            { forgot_password_token },
+            {
+                $set: {
+                    password: hashedPassword,
+                    forgot_password_token: ''
+                },
+                $currentDate: { updated_at: true }
+            }
+        )
+        return {
+            message: userMessages.resetPasswordSuccess
+        }
+    }
+
+    async getMe(user_id: string) {
+        const user = await databaseService.users.findOne(
+            { _id: new ObjectId(user_id) },
+            {
+                // projection is used to exclude sensitive fields
+                projection: {
+                    password: 0,
+                    email_verify_token: 0,
+                    forgot_password_token: 0
+                }
+            }
+        )
+        if (!user) {
+            throw new Error(userMessages.userNotFound)
+        }
+        return user
     }
 }
 
