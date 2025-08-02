@@ -8,19 +8,22 @@ import {
     emailVerifyTokenValidator,
     forgotPasswordValidator,
     verifyForgotPasswordTokenValidator,
-    resetPasswordValidator
+    resetPasswordValidator,
+    updateAboutMeValidator,
+    verifiedUserValidator
 } from './../middlewares/users.middlewares'
 import {
     registerController,
     loginController,
     logoutController,
+    refreshTokenController,
     emailVerifyController,
     resendEmailVerifyController,
     forgotPasswordController,
     verifyForgotPasswordController,
     resetPasswordController,
-    aboutMeController,
-    refreshTokenController
+    getAboutMeController,
+    updateAboutMeController
 } from '~/controllers/users.controllers'
 
 const usersRouter = Router()
@@ -37,6 +40,12 @@ usersRouter.get(
 )
 usersRouter.post('/reset-password', resetPasswordValidator, wrapRequestHandler(resetPasswordController))
 usersRouter.post('/refresh-token', refreshTokenValidator, wrapRequestHandler(refreshTokenController))
-usersRouter.get('/about-me', accessTokenValidator, wrapRequestHandler(aboutMeController))
-
+usersRouter.get('/about-me', accessTokenValidator, verifiedUserValidator, wrapRequestHandler(getAboutMeController))
+usersRouter.patch(
+    '/about-me',
+    accessTokenValidator,
+    verifiedUserValidator,
+    updateAboutMeValidator,
+    wrapRequestHandler(updateAboutMeController)
+)
 export default usersRouter

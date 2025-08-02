@@ -1,7 +1,13 @@
 import { Request, Response } from 'express'
 import usersService from '~/services/users.services'
 import { ParamsDictionary } from 'express-serve-static-core'
-import { ForgotPasswordReqBody, LogoutReqBody, RegisterReqBody, TokenPayload } from '~/models/requests/User.requests'
+import {
+    ForgotPasswordReqBody,
+    LogoutReqBody,
+    RegisterReqBody,
+    TokenPayload,
+    UpdateAboutMeReqBody
+} from '~/models/requests/User.requests'
 import User from '~/models/schemas/User.schema'
 import { userMessages } from '~/constants/messages'
 import { NODE_ENV } from '~/configs/env.config'
@@ -34,7 +40,7 @@ export const registerController = async (req: Request<ParamsDictionary, any, Reg
 export const loginController = async (req: Request, res: Response) => {
     const user = req.user as User
     const user_id = user._id
-    const { access_token, refresh_token } = await usersService.login(user_id.toString())
+    const { access_token, refresh_token } = await usersService.login(user_id.toString(), user.verify)
     res.cookie('refresh_token', refresh_token, {
         httpOnly: true,
         secure: NODE_ENV === 'production',
@@ -91,11 +97,8 @@ export const forgotPasswordController = async (
     req: Request<ParamsDictionary, any, ForgotPasswordReqBody>,
     res: Response
 ) => {
-    const { email } = req.body
-    if (!email) {
-        return res.status(httpStatus.BAD_REQUEST).json({ message: userMessages.emailIsRequired })
-    }
-    const result = await usersService.forgotPassword(email)
+    const { _id, verify } = req.user as User
+    const result = await usersService.forgotPassword(_id.toString(), verify)
     return res.json(result)
 }
 
@@ -134,11 +137,26 @@ export const refreshTokenController = async (req: Request, res: Response) => {
     })
 }
 
-export const aboutMeController = async (req: Request, res: Response) => {
+export const getAboutMeController = async (req: Request, res: Response) => {
     const { user_id } = req.decoded_authorization as TokenPayload
     const user = await usersService.getMe(user_id)
     return res.json({
         message: userMessages.userRetrievedSuccessfully,
+        result: user
+    })
+}
+
+export const updateAboutMeController = async (
+    req: Request<ParamsDictionary, any, UpdateAboutMeReqBody>,
+    res: Response
+) => {
+    const { user_id } = req.decoded_authorization as TokenPayload
+    const body = req.body
+    const payload = { ...body, date_of_birth: body.date_of_birth ? new Date(body.date_of_birth) : undefined }
+    const user = await usersService.updateAboutMe(user_id, payload as UpdateAboutMeReqBody)
+
+    return res.json({
+        message: userMessages.userUpdated,
         result: user
     })
 }

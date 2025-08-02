@@ -7,9 +7,33 @@ import usersService from '~/services/users.services'
 import { validate } from '~/utils/validation'
 import { comparePasswords } from '~/utils/hash'
 import { verifyToken } from '~/utils/jwt'
-import { Request } from 'express'
+import { NextFunction, Request, Response } from 'express'
 import { JWT_ACCESS_TOKEN_SECRET_KEY, JWT_REFRESH_TOKEN_SECRET_KEY } from '~/configs/env.config'
 import { UserVerifyStatus } from '~/constants/enum'
+import { TokenPayload } from '~/models/requests/User.requests'
+
+const nameSchema: ParamSchema = {
+    in: ['body'],
+    notEmpty: {
+        errorMessage: userMessages.nameIsRequired
+    },
+    isString: {
+        errorMessage: userMessages.nameMustBeString
+    },
+    isLength: {
+        options: { min: 2, max: 100 },
+        errorMessage: userMessages.nameLength
+    },
+    trim: true
+}
+
+const dateOfBirthSchema: ParamSchema = {
+    in: ['body'],
+    isISO8601: {
+        options: { strict: true, strictSeparator: true },
+        errorMessage: userMessages.dayOfBirthMustBeISO8601
+    }
+}
 
 const passwordSchema: ParamSchema = {
     in: ['body'],
@@ -63,21 +87,7 @@ const confirmPasswordSchema: ParamSchema = {
 
 export const registerValidator = validate(
     checkSchema({
-        name: {
-            in: ['body'],
-            notEmpty: {
-                errorMessage: userMessages.nameIsRequired
-            },
-            isString: {
-                errorMessage: userMessages.nameMustBeString
-            },
-            isLength: {
-                options: { min: 2, max: 100 },
-                errorMessage: userMessages.nameLength
-            },
-            optional: true,
-            trim: true
-        },
+        name: nameSchema,
         email: {
             in: ['body'],
             notEmpty: {
@@ -100,13 +110,7 @@ export const registerValidator = validate(
         },
         password: passwordSchema,
         confirm_password: confirmPasswordSchema,
-        date_of_birth: {
-            in: ['body'],
-            isISO8601: {
-                options: { strict: true, strictSeparator: true },
-                errorMessage: userMessages.dayOfBirthMustBeISO8601
-            }
-        }
+        date_of_birth: dateOfBirthSchema
     })
 )
 
@@ -256,11 +260,12 @@ export const forgotPasswordValidator = validate(
             normalizeEmail: true,
             trim: true,
             custom: {
-                options: async (value) => {
+                options: async (value, { req }) => {
                     const user = await databaseService.users.findOne({ email: value })
                     if (!user) {
                         throw new ErrorsWithStatus(userMessages.userNotFound, httpStatus.UNPROCESSABLE_ENTITY)
                     }
+                    req.user = user
                     return true
                 }
             }
@@ -325,3 +330,97 @@ export const resetPasswordValidator = validate(
         }
     })
 )
+
+export const updateAboutMeValidator = validate(
+    checkSchema({
+        name: {
+            ...nameSchema,
+            optional: true,
+            notEmpty: undefined
+        },
+        date_of_birth: {
+            ...dateOfBirthSchema,
+            optional: true
+        },
+        bio: {
+            in: ['body'],
+            isString: {
+                errorMessage: userMessages.bioMustBeString
+            },
+            isLength: {
+                options: { max: 500 },
+                errorMessage: userMessages.bioLength
+            },
+            optional: true,
+            trim: true
+        },
+        location: {
+            in: ['body'],
+            isString: {
+                errorMessage: userMessages.locationMustBeString
+            },
+            isLength: {
+                options: { max: 100 },
+                errorMessage: userMessages.locationLength
+            },
+            optional: true,
+            trim: true
+        },
+        website: {
+            in: ['body'],
+            isURL: {
+                errorMessage: userMessages.websiteMustBeValid
+            },
+            optional: true,
+            trim: true
+        },
+        username: {
+            in: ['body'],
+            isString: {
+                errorMessage: userMessages.usernameMustBeString
+            },
+            isLength: {
+                options: { min: 1, max: 40 },
+                errorMessage: userMessages.usernameLength
+            },
+            optional: true,
+            trim: true,
+            custom: {
+                options: async (value, { req }) => {
+                    if (value) {
+                        const user = await databaseService.users.findOne({ username: value })
+                        if (user && user._id.toString() !== req.user._id.toString()) {
+                            throw new ErrorsWithStatus('Username already exists', httpStatus.UNPROCESSABLE_ENTITY)
+                        }
+                    }
+                    return true
+                }
+            }
+        },
+        avatar: {
+            in: ['body'],
+            isString: {
+                errorMessage: userMessages.avatarURLMustBeString
+            },
+            optional: true,
+            trim: true
+        },
+        cover_photo: {
+            in: ['body'],
+            isString: {
+                errorMessage: userMessages.coverPhotoMustBeString
+            },
+            optional: true,
+            trim: true
+        }
+    })
+)
+
+export const verifiedUserValidator = (req: Request, res: Response, next: NextFunction) => {
+    const { verify } = req.decoded_authorization as TokenPayload
+    if (verify !== UserVerifyStatus.Verified) {
+        // If user is not verified, throw an error to the error handler
+        return next(new ErrorsWithStatus(userMessages.userNotVerified, httpStatus.FORBIDDEN))
+    }
+    next()
+}

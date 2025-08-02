@@ -1,6 +1,6 @@
 import databaseService from '~/services/database.services'
 import User from '~/models/schemas/User.schema'
-import { RegisterReqBody } from '~/models/requests/User.requests'
+import { RegisterReqBody, UpdateAboutMeReqBody } from '~/models/requests/User.requests'
 import { hashPassword } from '~/utils/hash'
 import { decodeToken, signToken } from '~/utils/jwt'
 import { TokenType, UserVerifyStatus } from '~/constants/enum'
@@ -17,10 +17,11 @@ import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import { userMessages } from '~/constants/messages'
 import crypto from 'crypto'
 class UsersService {
-    private signAccessToken(user_id: string) {
+    private signAccessToken(user_id: string, verify: UserVerifyStatus) {
         return signToken({
             payload: {
                 user_id,
+                verify,
                 token_type: TokenType.AccessToken
             },
             JWT_SECRET_KEY: JWT_ACCESS_TOKEN_SECRET_KEY as string,
@@ -30,10 +31,11 @@ class UsersService {
         })
     }
 
-    private signRefreshToken(user_id: string) {
+    private signRefreshToken(user_id: string, verify: UserVerifyStatus) {
         return signToken({
             payload: {
                 user_id,
+                verify,
                 token_type: TokenType.RefreshToken
             },
             JWT_SECRET_KEY: JWT_REFRESH_TOKEN_SECRET_KEY as string,
@@ -43,14 +45,15 @@ class UsersService {
         })
     }
 
-    private signBothTokens(user_id: string) {
-        return Promise.all([this.signAccessToken(user_id), this.signRefreshToken(user_id)])
+    private signBothTokens(user_id: string, verify: UserVerifyStatus) {
+        return Promise.all([this.signAccessToken(user_id, verify), this.signRefreshToken(user_id, verify)])
     }
 
-    private signForgotPasswordToken(email: string) {
+    private signForgotPasswordToken(user_id: string, verify: UserVerifyStatus) {
         return signToken({
             payload: {
-                email,
+                user_id,
+                verify,
                 token_type: TokenType.ForgotPasswordToken
             },
             JWT_SECRET_KEY: JWT_FORGOT_PASSWORD_TOKEN_SECRET_KEY as string,
@@ -77,7 +80,7 @@ class UsersService {
             })
         )
         const user_id = result.insertedId.toString()
-        const [access_token, refresh_token] = await this.signBothTokens(user_id)
+        const [access_token, refresh_token] = await this.signBothTokens(user_id, UserVerifyStatus.Unverified)
         // Store the refresh token in the database
         await databaseService.refreshTokens.insertOne(
             new RefreshToken({
@@ -92,8 +95,8 @@ class UsersService {
         }
     }
 
-    async login(user_id: string) {
-        const [access_token, refresh_token] = await this.signBothTokens(user_id)
+    async login(user_id: string, verify: UserVerifyStatus) {
+        const [access_token, refresh_token] = await this.signBothTokens(user_id, verify)
         // Store the refresh token in the database
         await databaseService.refreshTokens.insertOne(
             new RefreshToken({
@@ -127,7 +130,7 @@ class UsersService {
                 $currentDate: { updated_at: true }
             }
         )
-        const [access_token, refresh_token] = await this.signBothTokens(user_id)
+        const [access_token, refresh_token] = await this.signBothTokens(user_id, UserVerifyStatus.Verified)
         return {
             access_token,
             refresh_token
@@ -153,10 +156,10 @@ class UsersService {
         }
     }
 
-    async forgotPassword(email: string) {
-        const forgot_password_token = this.signForgotPasswordToken(email)
+    async forgotPassword(user_id: string, verify: UserVerifyStatus) {
+        const forgot_password_token = this.signForgotPasswordToken(user_id, verify)
         await databaseService.users.updateOne(
-            { email: email },
+            { _id: new ObjectId(user_id) },
             {
                 $set: {
                     forgot_password_token
@@ -217,10 +220,11 @@ class UsersService {
             throw new Error('Refresh token expired')
         }
         // Sign new tokens
-        const new_access_token = await this.signAccessToken(user_id)
+        const new_access_token = await this.signAccessToken(user_id, decoded_refresh_token.verify)
         const new_refresh_token = signToken({
             payload: {
                 user_id,
+                verify: decoded_refresh_token.verify,
                 token_type: TokenType.RefreshToken
             },
             JWT_SECRET_KEY: JWT_REFRESH_TOKEN_SECRET_KEY as string,
@@ -260,6 +264,37 @@ class UsersService {
         if (!user) {
             throw new Error(userMessages.userNotFound)
         }
+        return user
+    }
+
+    async updateAboutMe(user_id: string, payload: UpdateAboutMeReqBody) {
+        // Only update provided fields, do not replace the whole document
+        const updateFields: Partial<User> = {}
+
+        if (payload.name !== undefined) updateFields.name = payload.name
+        if (payload.date_of_birth !== undefined) updateFields.date_of_birth = new Date(payload.date_of_birth)
+        if (payload.bio !== undefined) updateFields.bio = payload.bio
+        if (payload.location !== undefined) updateFields.location = payload.location
+        if (payload.website !== undefined) updateFields.website = payload.website
+        if (payload.username !== undefined) updateFields.username = payload.username
+        if (payload.avatar !== undefined) updateFields.avatar = payload.avatar
+        if (payload.cover_photo !== undefined) updateFields.cover_photo = payload.cover_photo
+
+        // Always update updated_at
+        updateFields.updated_at = new Date()
+
+        const user = await databaseService.users.findOneAndUpdate(
+            { _id: new ObjectId(user_id) },
+            { $set: updateFields },
+            {
+                returnDocument: 'after',
+                projection: {
+                    password: 0,
+                    email_verify_token: 0,
+                    forgot_password_token: 0
+                }
+            }
+        )
         return user
     }
 }

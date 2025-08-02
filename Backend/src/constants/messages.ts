@@ -27,6 +27,7 @@ export const userMessages = {
     userLoggedIn: 'User logged in successfully',
     userLoggedOut: 'User logged out successfully',
     userRetrievedSuccessfully: 'User retrieved successfully',
+    userNotVerified: 'User is not verified',
     userUpdated: 'User updated successfully',
     userDeleted: 'User deleted successfully',
     accessTokenRequired: 'Access token is required',
@@ -45,5 +46,14 @@ export const userMessages = {
     forgotPasswordTokenMustBeString: 'Forgot password token must be a string',
     forgotPasswordTokenInvalid: 'Forgot password token is invalid, expired or the user is not found',
     forgotPasswordTokenVerified: 'Forgot password token verified successfully',
-    resetPasswordSuccess: 'Reset password successfully'
+    resetPasswordSuccess: 'Reset password successfully',
+    bioMustBeString: 'Bio must be a string',
+    bioLength: 'Bio must be between 0 and 500 characters long',
+    locationMustBeString: 'Location must be a string',
+    locationLength: 'Location must be between 0 and 100 characters long',
+    websiteMustBeValid: 'Website must be a valid URL',
+    usernameMustBeString: 'Username must be a string',
+    usernameLength: 'Username must be between 1 and 40 characters long',
+    avatarURLMustBeString: 'Avatar URL must be a string',
+    coverPhotoMustBeString: 'Cover photo must be a string'
 }
