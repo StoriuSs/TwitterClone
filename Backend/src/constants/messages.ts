@@ -27,7 +27,7 @@ export const userMessages = {
     userLoggedIn: 'User logged in successfully',
     userLoggedOut: 'User logged out successfully',
     userRetrievedSuccessfully: 'User retrieved successfully',
-    userNotVerified: 'User is not verified',
+    userNotVerified: 'User has to be verified to perform this action',
     userUpdated: 'User updated successfully',
     userDeleted: 'User deleted successfully',
     accessTokenRequired: 'Access token is required',
@@ -53,7 +53,9 @@ export const userMessages = {
     locationLength: 'Location must be between 0 and 100 characters long',
     websiteMustBeValid: 'Website must be a valid URL',
     usernameMustBeString: 'Username must be a string',
-    usernameLength: 'Username must be between 1 and 40 characters long',
+    usernameLength: 'Username must be between 4 and 15 characters long',
+    usernameAlreadyExists: 'Username already exists',
+    usernameInvalid: 'Username can only contain letters, numbers, and underscores',
     avatarURLMustBeString: 'Avatar URL must be a string',
     coverPhotoMustBeString: 'Cover photo must be a string',
     followUserIdRequired: 'Follow user ID is required',
@@ -64,5 +66,9 @@ export const userMessages = {
     unfollowUserIdMustBeString: 'Unfollow user ID must be a string',
     cannotUnfollowYourself: 'You cannot unfollow yourself',
     unfollowSuccess: 'Unfollowed user successfully',
-    notFollowing: 'You are not following this user'
+    notFollowing: 'You are not following this user',
+    oldPasswordRequired: 'Old password is required',
+    oldPasswordMustBeString: 'Old password must be a string',
+    oldPasswordIncorrect: 'Old password is incorrect',
+    newPasswordMustBeDifferent: 'New password must be different from old password'
 }

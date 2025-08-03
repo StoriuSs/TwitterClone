@@ -386,12 +386,16 @@ export const updateAboutMeValidator = validate(
             },
             optional: true,
             trim: true,
+            matches: {
+                options: [/^[A-Za-z0-9_]+$/],
+                errorMessage: userMessages.usernameInvalid
+            },
             custom: {
                 options: async (value, { req }) => {
                     if (value) {
                         const user = await databaseService.users.findOne({ username: value })
-                        if (user && user._id.toString() !== req.user._id.toString()) {
-                            throw new ErrorsWithStatus('Username already exists', httpStatus.UNPROCESSABLE_ENTITY)
+                        if (user && user._id.toString() !== req.decoded_authorization.user_id) {
+                            throw new ErrorsWithStatus(userMessages.usernameAlreadyExists, httpStatus.BAD_REQUEST)
                         }
                     }
                     return true
@@ -460,6 +464,60 @@ export const unfollowValidator = validate(
                     const followedUser = await databaseService.users.findOne({ _id: new ObjectId(value) })
                     if (!followedUser) {
                         throw new ErrorsWithStatus(userMessages.userNotFound, httpStatus.NOT_FOUND)
+                    }
+                    return true
+                }
+            }
+        }
+    })
+)
+
+export const changePasswordValidator = validate(
+    checkSchema({
+        old_password: {
+            in: ['body'],
+            notEmpty: {
+                errorMessage: userMessages.oldPasswordRequired
+            },
+            isString: {
+                errorMessage: userMessages.oldPasswordMustBeString
+            },
+            custom: {
+                options: async (value, { req }) => {
+                    const user_id = req.decoded_authorization.user_id
+                    const user = await databaseService.users.findOne({ _id: new ObjectId(user_id) })
+                    if (!user) {
+                        throw new ErrorsWithStatus(userMessages.userNotFound, httpStatus.NOT_FOUND)
+                    }
+                    const isMatch = await comparePasswords(value, user.password)
+                    if (!isMatch) {
+                        throw new ErrorsWithStatus(userMessages.oldPasswordIncorrect, httpStatus.UNPROCESSABLE_ENTITY)
+                    }
+                    return true
+                }
+            }
+        },
+        new_password: {
+            ...passwordSchema,
+            custom: {
+                options: async (value, { req }) => {
+                    if (value === req.body.old_password) {
+                        throw new ErrorsWithStatus(
+                            userMessages.newPasswordMustBeDifferent,
+                            httpStatus.UNPROCESSABLE_ENTITY
+                        )
+                    }
+                    return true
+                }
+            }
+        },
+        confirm_new_password: {
+            ...confirmPasswordSchema,
+            custom: {
+                options: async (value, { req }) => {
+                    const { new_password } = req.body
+                    if (value !== new_password) {
+                        throw new ErrorsWithStatus(userMessages.passwordsMustMatch, httpStatus.UNPROCESSABLE_ENTITY)
                     }
                     return true
                 }

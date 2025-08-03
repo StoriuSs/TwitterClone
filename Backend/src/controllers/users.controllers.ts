@@ -192,3 +192,10 @@ export const unfollowController = async (req: Request, res: Response) => {
         result
     })
 }
+
+export const changePasswordController = async (req: Request, res: Response) => {
+    const new_password = req.body.new_password
+    const { user_id } = req.decoded_authorization as TokenPayload
+    const result = await usersService.changePassword(user_id, new_password)
+    return res.json(result)
+}

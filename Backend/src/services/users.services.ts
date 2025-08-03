@@ -369,6 +369,22 @@ class UsersService {
             followed_user_id
         }
     }
+
+    async changePassword(user_id: string, new_password: string) {
+        const hashedPassword = await hashPassword(new_password)
+        await databaseService.users.updateOne(
+            { _id: new ObjectId(user_id) },
+            {
+                $set: {
+                    password: hashedPassword
+                },
+                $currentDate: { updated_at: true }
+            }
+        )
+        return {
+            message: userMessages.resetPasswordSuccess
+        }
+    }
 }
 
 const usersService = new UsersService()
