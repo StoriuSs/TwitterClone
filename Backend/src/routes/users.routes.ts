@@ -23,8 +23,11 @@ import {
     verifyForgotPasswordController,
     resetPasswordController,
     getAboutMeController,
-    updateAboutMeController
+    updateAboutMeController,
+    getProfileController
 } from '~/controllers/users.controllers'
+
+import { filterDataFromBody } from '~/middlewares/common.middlewares'
 
 const usersRouter = Router()
 usersRouter.post('/register', registerValidator, wrapRequestHandler(registerController))
@@ -46,6 +49,19 @@ usersRouter.patch(
     accessTokenValidator,
     verifiedUserValidator,
     updateAboutMeValidator,
+    filterDataFromBody([
+        'name',
+        'email',
+        'date_of_birth',
+        'bio',
+        'location',
+        'website',
+        'username',
+        'avatar',
+        'cover_photo'
+    ]),
     wrapRequestHandler(updateAboutMeController)
 )
+usersRouter.get('/:username', wrapRequestHandler(getProfileController))
+
 export default usersRouter

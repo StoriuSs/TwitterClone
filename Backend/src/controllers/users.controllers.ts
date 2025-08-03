@@ -160,3 +160,15 @@ export const updateAboutMeController = async (
         result: user
     })
 }
+
+export const getProfileController = async (req: Request, res: Response) => {
+    const { username } = req.params
+    const user = await usersService.getProfile(username)
+    if (!user) {
+        return res.status(httpStatus.NOT_FOUND).json({ message: userMessages.userNotFound })
+    }
+    return res.json({
+        message: userMessages.userRetrievedSuccessfully,
+        result: user
+    })
+}
