@@ -11,6 +11,7 @@ import { NextFunction, Request, Response } from 'express'
 import { JWT_ACCESS_TOKEN_SECRET_KEY, JWT_REFRESH_TOKEN_SECRET_KEY } from '~/configs/env.config'
 import { UserVerifyStatus } from '~/constants/enum'
 import { TokenPayload } from '~/models/requests/User.requests'
+import { ObjectId } from 'mongodb'
 
 const nameSchema: ParamSchema = {
     in: ['body'],
@@ -412,6 +413,30 @@ export const updateAboutMeValidator = validate(
             },
             optional: true,
             trim: true
+        }
+    })
+)
+
+export const followValidator = validate(
+    checkSchema({
+        followed_user_id: {
+            in: ['body'],
+            trim: true,
+            notEmpty: {
+                errorMessage: userMessages.followUserIdRequired
+            },
+            custom: {
+                options: async (value, { req }) => {
+                    if (value === req.decoded_authorization.user_id) {
+                        throw new ErrorsWithStatus(userMessages.cannotFollowYourself, httpStatus.BAD_REQUEST)
+                    }
+                    const followedUser = await databaseService.users.findOne({ _id: new ObjectId(value) })
+                    if (!followedUser) {
+                        throw new ErrorsWithStatus(userMessages.userNotFound, httpStatus.NOT_FOUND)
+                    }
+                    return true
+                }
+            }
         }
     })
 )

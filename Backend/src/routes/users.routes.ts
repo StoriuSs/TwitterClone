@@ -10,7 +10,8 @@ import {
     verifyForgotPasswordTokenValidator,
     resetPasswordValidator,
     updateAboutMeValidator,
-    verifiedUserValidator
+    verifiedUserValidator,
+    followValidator
 } from './../middlewares/users.middlewares'
 import {
     registerController,
@@ -24,7 +25,8 @@ import {
     resetPasswordController,
     getAboutMeController,
     updateAboutMeController,
-    getProfileController
+    getProfileController,
+    followController
 } from '~/controllers/users.controllers'
 
 import { filterDataFromBody } from '~/middlewares/common.middlewares'
@@ -63,5 +65,12 @@ usersRouter.patch(
     wrapRequestHandler(updateAboutMeController)
 )
 usersRouter.get('/:username', wrapRequestHandler(getProfileController))
+usersRouter.post(
+    '/follow',
+    accessTokenValidator,
+    verifiedUserValidator,
+    followValidator,
+    wrapRequestHandler(followController)
+)
 
 export default usersRouter

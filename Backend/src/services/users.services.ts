@@ -16,6 +16,9 @@ import { ObjectId } from 'mongodb'
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import { userMessages } from '~/constants/messages'
 import crypto from 'crypto'
+import Follower from '~/models/schemas/Follower.schema'
+import { ErrorsWithStatus } from '~/models/Errors'
+import httpStatus from '~/constants/httpStatus'
 class UsersService {
     private signAccessToken(user_id: string, verify: UserVerifyStatus) {
         return signToken({
@@ -313,6 +316,33 @@ class UsersService {
             throw new Error(userMessages.userNotFound)
         }
         return user
+    }
+
+    async follow(user_id: string, followed_user_id: string) {
+        const userObjectId = new ObjectId(user_id)
+        const followedUserObjectId = new ObjectId(followed_user_id)
+
+        // Check if the user is already following the followed user
+        const existingFollow = await databaseService.followers.findOne({
+            user_id: userObjectId,
+            followed_user_id: followedUserObjectId
+        })
+
+        if (existingFollow) {
+            throw new ErrorsWithStatus(userMessages.alreadyFollowing, httpStatus.BAD_REQUEST)
+        }
+
+        // Update the user's following list
+        await databaseService.followers.insertOne(
+            new Follower({
+                user_id: userObjectId,
+                followed_user_id: followedUserObjectId
+            })
+        )
+        return {
+            message: userMessages.followSuccess,
+            followed_user_id
+        }
     }
 }
 

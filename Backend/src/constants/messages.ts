@@ -55,5 +55,9 @@ export const userMessages = {
     usernameMustBeString: 'Username must be a string',
     usernameLength: 'Username must be between 1 and 40 characters long',
     avatarURLMustBeString: 'Avatar URL must be a string',
-    coverPhotoMustBeString: 'Cover photo must be a string'
+    coverPhotoMustBeString: 'Cover photo must be a string',
+    followUserIdRequired: 'Follow user ID is required',
+    alreadyFollowing: 'You are already following this user',
+    cannotFollowYourself: 'You cannot follow yourself',
+    followSuccess: 'Followed user successfully'
 }
