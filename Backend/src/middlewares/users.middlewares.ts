@@ -441,6 +441,33 @@ export const followValidator = validate(
     })
 )
 
+export const unfollowValidator = validate(
+    checkSchema({
+        user_id: {
+            in: ['params'],
+            notEmpty: {
+                errorMessage: userMessages.unfollowUserIdRequired
+            },
+            isString: {
+                errorMessage: userMessages.unfollowUserIdMustBeString
+            },
+            trim: true,
+            custom: {
+                options: async (value, { req }) => {
+                    if (value === req.decoded_authorization.user_id) {
+                        throw new ErrorsWithStatus(userMessages.cannotUnfollowYourself, httpStatus.BAD_REQUEST)
+                    }
+                    const followedUser = await databaseService.users.findOne({ _id: new ObjectId(value) })
+                    if (!followedUser) {
+                        throw new ErrorsWithStatus(userMessages.userNotFound, httpStatus.NOT_FOUND)
+                    }
+                    return true
+                }
+            }
+        }
+    })
+)
+
 export const verifiedUserValidator = (req: Request, res: Response, next: NextFunction) => {
     const { verify } = req.decoded_authorization as TokenPayload
     if (verify !== UserVerifyStatus.Verified) {

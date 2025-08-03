@@ -182,3 +182,13 @@ export const followController = async (req: Request, res: Response) => {
         result
     })
 }
+
+export const unfollowController = async (req: Request, res: Response) => {
+    const { user_id } = req.decoded_authorization as TokenPayload
+    const { user_id: followed_user_id } = req.params
+    const result = await usersService.unfollow(user_id, followed_user_id)
+    return res.json({
+        message: userMessages.unfollowSuccess,
+        result
+    })
+}

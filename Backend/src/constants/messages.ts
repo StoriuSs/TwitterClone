@@ -59,5 +59,10 @@ export const userMessages = {
     followUserIdRequired: 'Follow user ID is required',
     alreadyFollowing: 'You are already following this user',
     cannotFollowYourself: 'You cannot follow yourself',
-    followSuccess: 'Followed user successfully'
+    followSuccess: 'Followed user successfully',
+    unfollowUserIdRequired: 'Unfollow user ID is required',
+    unfollowUserIdMustBeString: 'Unfollow user ID must be a string',
+    cannotUnfollowYourself: 'You cannot unfollow yourself',
+    unfollowSuccess: 'Unfollowed user successfully',
+    notFollowing: 'You are not following this user'
 }

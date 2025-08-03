@@ -344,6 +344,31 @@ class UsersService {
             followed_user_id
         }
     }
+
+    async unfollow(user_id: string, followed_user_id: string) {
+        const userObjectId = new ObjectId(user_id)
+        const followedUserObjectId = new ObjectId(followed_user_id)
+
+        // Check if the user is following the followed user
+        const existingFollow = await databaseService.followers.findOne({
+            user_id: userObjectId,
+            followed_user_id: followedUserObjectId
+        })
+
+        if (!existingFollow) {
+            throw new ErrorsWithStatus(userMessages.notFollowing, httpStatus.BAD_REQUEST)
+        }
+
+        // Remove the follow relationship
+        await databaseService.followers.deleteOne({
+            user_id: userObjectId,
+            followed_user_id: followedUserObjectId
+        })
+        return {
+            message: userMessages.unfollowSuccess,
+            followed_user_id
+        }
+    }
 }
 
 const usersService = new UsersService()
