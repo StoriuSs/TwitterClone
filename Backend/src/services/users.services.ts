@@ -134,6 +134,12 @@ class UsersService {
             }
         )
         const [access_token, refresh_token] = await this.signBothTokens(user_id, UserVerifyStatus.Verified)
+        await databaseService.refreshTokens.insertOne(
+            new RefreshToken({
+                token: refresh_token,
+                user_id: new ObjectId(user_id)
+            })
+        )
         return {
             access_token,
             refresh_token
