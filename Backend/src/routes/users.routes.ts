@@ -18,6 +18,7 @@ import {
 import {
     registerController,
     loginController,
+    oauthGoogleController,
     logoutController,
     refreshTokenController,
     emailVerifyController,
@@ -38,6 +39,7 @@ import { filterDataFromBody } from '~/middlewares/common.middlewares'
 const usersRouter = Router()
 usersRouter.post('/register', registerValidator, wrapRequestHandler(registerController))
 usersRouter.post('/login', loginValidator, wrapRequestHandler(loginController))
+usersRouter.get('/oauth/google', wrapRequestHandler(oauthGoogleController))
 usersRouter.post('/logout', accessTokenValidator, refreshTokenValidator, wrapRequestHandler(logoutController))
 usersRouter.get('/verify-email/:token', emailVerifyTokenValidator, wrapRequestHandler(emailVerifyController))
 usersRouter.post('/resend-verify-email', accessTokenValidator, wrapRequestHandler(resendEmailVerifyController))

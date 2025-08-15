@@ -10,7 +10,7 @@ import {
 } from '~/models/requests/User.requests'
 import User from '~/models/schemas/User.schema'
 import { userMessages } from '~/constants/messages'
-import { NODE_ENV } from '~/configs/env.config'
+import { NODE_ENV, CLIENT_REDIRECT_URL } from '~/configs/env.config'
 import ms from 'ms'
 import httpStatus from '~/constants/httpStatus'
 import databaseService from '~/services/database.services'
@@ -55,6 +55,20 @@ export const loginController = async (req: Request, res: Response) => {
             refresh_token
         }
     })
+}
+
+export const oauthGoogleController = async (req: Request, res: Response) => {
+    const { code } = req.query
+    const result = await usersService.oauthGoogleService(code as string)
+    res.cookie('refresh_token', result.refresh_token, {
+        httpOnly: true,
+        secure: NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: ms('7d')
+    })
+    const urlRedirect =
+        (CLIENT_REDIRECT_URL as string) + `?access_token=${result.access_token}&newUser=${result.newUser}`
+    return res.redirect(urlRedirect)
 }
 
 export const logoutController = async (req: Request<ParamsDictionary, any, LogoutReqBody>, res: Response) => {

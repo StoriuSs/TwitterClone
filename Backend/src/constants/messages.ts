@@ -70,5 +70,6 @@ export const userMessages = {
     oldPasswordRequired: 'Old password is required',
     oldPasswordMustBeString: 'Old password must be a string',
     oldPasswordIncorrect: 'Old password is incorrect',
-    newPasswordMustBeDifferent: 'New password must be different from old password'
+    newPasswordMustBeDifferent: 'New password must be different from old password',
+    gmailNotVerified: 'Gmail account is not verified'
 }

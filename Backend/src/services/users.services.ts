@@ -10,7 +10,10 @@ import {
     JWT_REFRESH_TOKEN_SECRET_KEY,
     JWT_REFRESH_TOKEN_EXPIRATION,
     JWT_FORGOT_PASSWORD_TOKEN_SECRET_KEY,
-    JWT_FORGOT_PASSWORD_TOKEN_EXPIRATION
+    JWT_FORGOT_PASSWORD_TOKEN_EXPIRATION,
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    GOOGLE_REDIRECT_URI
 } from '~/configs/env.config'
 import { ObjectId } from 'mongodb'
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
@@ -19,6 +22,8 @@ import crypto from 'crypto'
 import Follower from '~/models/schemas/Follower.schema'
 import { ErrorsWithStatus } from '~/models/Errors'
 import httpStatus from '~/constants/httpStatus'
+import axios from 'axios'
+
 class UsersService {
     private signAccessToken(user_id: string, verify: UserVerifyStatus) {
         return signToken({
@@ -66,6 +71,40 @@ class UsersService {
         })
     }
 
+    private async getOauthGoogleToken(code: string) {
+        const body = {
+            code,
+            client_id: GOOGLE_CLIENT_ID,
+            client_secret: GOOGLE_CLIENT_SECRET,
+            redirect_uri: GOOGLE_REDIRECT_URI,
+            grant_type: 'authorization_code'
+        }
+        const response = await axios.post('https://oauth2.googleapis.com/token', body, {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        })
+        return response.data.access_token
+    }
+
+    private async getOauthGoogleUserInfo(access_token: string) {
+        const response = await axios.get('https://www.googleapis.com/oauth2/v1/userinfo', {
+            headers: {
+                Authorization: `Bearer ${access_token}`
+            }
+        })
+        return response.data as {
+            id: string
+            email: string
+            verified_email: boolean
+            name: string
+            given_name?: string
+            family_name?: string
+            picture?: string
+            locale?: string
+        }
+    }
+
     async emailExists(email: string) {
         const user = await databaseService.users.findOne({ email })
         return !!user
@@ -110,6 +149,42 @@ class UsersService {
         return {
             access_token,
             refresh_token
+        }
+    }
+
+    async oauthGoogleService(code: string) {
+        const access_token = await this.getOauthGoogleToken(code)
+        const userInfo = await this.getOauthGoogleUserInfo(access_token)
+        if (!userInfo.verified_email) {
+            throw new ErrorsWithStatus(userMessages.gmailNotVerified, httpStatus.BAD_REQUEST)
+        }
+        // check if user already exist
+        const user = await databaseService.users.findOne({ email: userInfo.email })
+        // If user exists, login the user
+        if (user) {
+            const { access_token, refresh_token } = await this.login(user._id.toString(), user.verify)
+            return {
+                access_token,
+                refresh_token,
+                newUser: false
+            }
+        }
+        // If not, register the user
+        else {
+            const { access_token, refresh_token } = await this.register({
+                email: userInfo.email,
+                name: userInfo.name,
+                password: crypto.randomBytes(16).toString('hex'), // Generate a random password,
+                confirm_password: '', // Not used in OAuth flow
+                date_of_birth: new Date().toISOString(), // Default to current date, can be updated later
+                avatar: userInfo.picture,
+                verify: UserVerifyStatus.Verified
+            })
+            return {
+                access_token,
+                refresh_token,
+                newUser: true
+            }
         }
     }
 
