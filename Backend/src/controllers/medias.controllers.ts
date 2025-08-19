@@ -1,9 +1,11 @@
 import { Request, Response, NextFunction } from 'express'
 import path from 'path'
 import { UPLOAD_IMAGE_DIR, UPLOAD_VIDEO_DIR } from '~/constants/dir'
+import httpStatus from '~/constants/httpStatus'
 import { userMessages } from '~/constants/messages'
 import mediasServices from '~/services/medias.services'
-
+import fs from 'fs'
+import mime from 'mime'
 export const uploadImageController = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const imgUrl = await mediasServices.uploadImageService(req)
@@ -41,26 +43,29 @@ export const uploadVideoController = async (req: Request, res: Response, next: N
     }
 }
 
-export const serveVideoController = (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const filename = req.params.filename
-        const videoPath = path.resolve(UPLOAD_VIDEO_DIR, filename)
-
-        // Set content type for videos
-        res.setHeader('Content-Type', 'video/mp4')
-
-        // Set Content-Disposition to 'inline' to encourage browsers to play the video
-        res.setHeader('Content-Disposition', 'inline')
-
-        res.sendFile(videoPath, (err) => {
-            if (err && !res.headersSent) {
-                console.error('Error serving video:', err)
-            }
-        })
-    } catch (error) {
-        // Only call next if we haven't sent any response yet
-        if (!res.headersSent) {
-            next(error)
-        }
+export const serveVideoController = (req: Request, res: Response) => {
+    const range = req.headers.range
+    if (!range) {
+        return res.status(httpStatus.BAD_REQUEST).send('Range header is required')
     }
+    const { filename } = req.params
+    const videoPath = path.resolve(UPLOAD_VIDEO_DIR, filename)
+    // video size (bytes)
+    const videoSize = fs.statSync(videoPath).size
+    // chunk size for each stream part
+    const chunkSize = 10 ** 6 // 1 MB
+    const start = Number(range.replace(/\D/g, ''))
+    const end = Math.min(start + chunkSize, videoSize - 1)
+    // normally this equals to the chunk size, except when it's near the end of the video
+    const contentLength = end - start + 1
+    const contentType = mime.getType(videoPath) || 'video/*'
+    const headers = {
+        'Content-Type': contentType,
+        'Content-Length': contentLength,
+        'Accept-Ranges': 'bytes',
+        'Content-Range': `bytes ${start}-${end}/${videoSize}`
+    }
+    res.writeHead(httpStatus.PARTIAL_CONTENT, headers)
+    const videoStreams = fs.createReadStream(videoPath, { start, end })
+    videoStreams.pipe(res)
 }
