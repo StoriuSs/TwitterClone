@@ -4,6 +4,7 @@ config({ path: '.env' })
 
 export const {
     NODE_ENV,
+    HOST,
     PORT,
     MONGODB_URI,
     JWT_ACCESS_TOKEN_SECRET_KEY,

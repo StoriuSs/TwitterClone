@@ -12,6 +12,7 @@ import { JWT_ACCESS_TOKEN_SECRET_KEY, JWT_REFRESH_TOKEN_SECRET_KEY } from '~/con
 import { UserVerifyStatus } from '~/constants/enum'
 import { TokenPayload } from '~/models/requests/User.requests'
 import { ObjectId } from 'mongodb'
+import { REGEX_USERNAME } from '~/constants/regex'
 
 const nameSchema: ParamSchema = {
     in: ['body'],
@@ -387,7 +388,7 @@ export const updateAboutMeValidator = validate(
             optional: true,
             trim: true,
             matches: {
-                options: [/^[A-Za-z0-9_]+$/],
+                options: [REGEX_USERNAME],
                 errorMessage: userMessages.usernameInvalid
             },
             custom: {

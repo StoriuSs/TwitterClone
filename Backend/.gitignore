@@ -7,3 +7,4 @@ coverage/
 *.tsbuildinfo
 npm-debug.log*
 .vscode/
+uploads/
