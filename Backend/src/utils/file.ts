@@ -14,12 +14,12 @@ export const initFolder = () => {
     }
 }
 
-export const handleUploadSingleImage = async (req: Request) => {
+export const handleUploadImage = async (req: Request) => {
     const form = formidable({
         uploadDir: UPLOAD_TEMP_DIR,
-        maxFiles: 1,
+        maxFiles: 4,
         keepExtensions: true,
-        maxFileSize: 400 * 1024, // 400KB
+        maxFileSize: 400 * 1024 * 4, // 400KB per image
         filter: function ({ name, mimetype }) {
             // allow only images
             const valid = name === 'image' && Boolean(mimetype?.includes('image/'))
@@ -29,7 +29,7 @@ export const handleUploadSingleImage = async (req: Request) => {
             return true
         }
     })
-    return new Promise<File>((resolve, reject) => {
+    return new Promise<File[]>((resolve, reject) => {
         form.parse(req, (err, fields, files) => {
             if (err) {
                 reject(err)
@@ -37,7 +37,7 @@ export const handleUploadSingleImage = async (req: Request) => {
             if (!files || !files.image) {
                 reject(new Error('No file uploaded'))
             }
-            resolve((files.image as File[])[0])
+            resolve(files.image as File[])
         })
     })
 }

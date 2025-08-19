@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from 'express'
-import path from 'path/win32'
+import path from 'path'
 import { UPLOAD_DIR } from '~/constants/dir'
 import { userMessages } from '~/constants/messages'
 import mediasServices from '~/services/medias.services'
 
-export const uploadSingleImageController = async (req: Request, res: Response, next: NextFunction) => {
+export const uploadImageController = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const imgUrl = await mediasServices.uploadSingleImageService(req)
+        const imgUrl = await mediasServices.uploadImageService(req)
         return res.json({
             message: userMessages.uploadSuccess,
             result: imgUrl
