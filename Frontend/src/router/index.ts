@@ -4,6 +4,7 @@ import LoginOauth from '@/components/auth/LoginOauth.vue'
 import SignUp from '@/components/auth/SignUp.vue'
 import SignUpEmail from '@/components/auth/SignUpEmail.vue'
 import LoginForm from '@/components/auth/LoginForm.vue'
+import EmailVerification from '@/components/auth/verification/EmailVerification.vue'
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -32,6 +33,11 @@ const router = createRouter({
             path: '/login',
             name: 'login',
             component: LoginForm
+        },
+        {
+            path: '/verify-email',
+            name: 'verify-email',
+            component: EmailVerification
         }
     ]
 })
