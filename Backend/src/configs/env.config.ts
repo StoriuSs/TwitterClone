@@ -6,6 +6,7 @@ export const {
     NODE_ENV,
     HOST,
     PORT,
+    CLIENT_PORT,
     MONGODB_URI,
     JWT_ACCESS_TOKEN_SECRET_KEY,
     JWT_REFRESH_TOKEN_SECRET_KEY,
