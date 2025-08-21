@@ -19,7 +19,7 @@ onMounted(async () => {
         // Store the access token and set authenticated state
         authStore.accessToken = accessToken
         authStore.isAuthenticated = true
-        localStorage.setItem('accessToken', accessToken)
+        localStorage.setItem('access_token', accessToken)
 
         // Fetch user info to store in state and localStorage
         await authStore.getUserInfo()

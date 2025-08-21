@@ -6,9 +6,9 @@ import { extractErrorMessage } from '@/interfaces/error.interface'
 export const useAuthStore = defineStore('auth', {
     state: (): AuthStateType => ({
         user: JSON.parse(localStorage.getItem('user') || 'null'),
-        accessToken: localStorage.getItem('accessToken') || '',
+        accessToken: localStorage.getItem('access_token') || '',
         email_verify_token: '',
-        isAuthenticated: !!localStorage.getItem('accessToken'),
+        isAuthenticated: !!localStorage.getItem('access_token'),
         loading: false,
         error: null
     }),
@@ -28,7 +28,7 @@ export const useAuthStore = defineStore('auth', {
                 this.isAuthenticated = true
 
                 // Store access token in localStorage
-                localStorage.setItem('accessToken', access_token)
+                localStorage.setItem('access_token', access_token)
                 // Refresh token is automatically stored in HTTP-only cookie by the server
                 return {
                     success: true,
@@ -62,7 +62,7 @@ export const useAuthStore = defineStore('auth', {
                 this.isAuthenticated = true
 
                 // Store access token in localStorage
-                localStorage.setItem('accessToken', access_token)
+                localStorage.setItem('access_token', access_token)
 
                 return {
                     success: true,
@@ -115,7 +115,7 @@ export const useAuthStore = defineStore('auth', {
                 this.isAuthenticated = false
 
                 localStorage.removeItem('user')
-                localStorage.removeItem('accessToken')
+                localStorage.removeItem('access_token')
                 // Refresh token is cleared by the server via HTTP-only cookie
 
                 this.loading = false

@@ -46,7 +46,7 @@ const router = createRouter({
 const authRoutes = ['/login', '/signup', '/signup/email', '/login/oauth', '/verify-email']
 
 router.beforeEach((to, from, next) => {
-    const accessToken = localStorage.getItem('accessToken')
+    const accessToken = localStorage.getItem('access_token')
     // If user is authenticated and tries to access an auth route, redirect to home
     if (accessToken && authRoutes.includes(to.path)) {
         next({ path: '/' })
