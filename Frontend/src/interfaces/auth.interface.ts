@@ -6,6 +6,11 @@ interface UserRegistrationDataType {
     date_of_birth: string
 }
 
+interface UserLoginDataType {
+    email: string
+    password: string
+}
+
 interface UserType {
     _id: string
     name: string
@@ -30,4 +35,4 @@ interface AuthStateType {
     error: string | null
 }
 
-export type { UserRegistrationDataType, UserType, AuthStateType }
+export type { UserRegistrationDataType, UserLoginDataType, UserType, AuthStateType }
