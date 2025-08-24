@@ -72,5 +72,7 @@ export const userMessages = {
     oldPasswordIncorrect: 'Old password is incorrect',
     newPasswordMustBeDifferent: 'New password must be different from old password',
     gmailNotVerified: 'Gmail account is not verified',
-    uploadSuccess: 'File uploaded successfully'
+    uploadSuccess: 'File uploaded successfully',
+    videoStatusFound: 'Video status found',
+    videoStatusNotFound: 'Video status not found'
 }

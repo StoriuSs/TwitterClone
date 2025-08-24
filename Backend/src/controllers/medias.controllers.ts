@@ -6,6 +6,7 @@ import { userMessages } from '~/constants/messages'
 import mediasServices from '~/services/medias.services'
 import fs from 'fs'
 import mime from 'mime'
+
 export const uploadImageController = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const imgUrl = await mediasServices.uploadImageService(req)
@@ -68,4 +69,62 @@ export const serveVideoController = (req: Request, res: Response) => {
     res.writeHead(httpStatus.PARTIAL_CONTENT, headers)
     const videoStreams = fs.createReadStream(videoPath, { start, end })
     videoStreams.pipe(res)
+}
+
+export const uploadVideoHLSController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const hlsUrl = await mediasServices.uploadVideoHLSService(req)
+        return res.json({
+            message: userMessages.uploadSuccess,
+            result: hlsUrl
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const serveM3U8Controller = (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params
+        const hlsPath = path.resolve(UPLOAD_VIDEO_DIR, id, 'master.m3u8')
+        return res.sendFile(hlsPath, (err) => {
+            if (err) {
+                next(err)
+            }
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const serveSegmentController = (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id, v, segment } = req.params
+        const hlsPath = path.resolve(UPLOAD_VIDEO_DIR, id, v, segment)
+        return res.sendFile(hlsPath, (err) => {
+            if (err) {
+                next(err)
+            }
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const videoStatusController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params
+        const result = await mediasServices.getVideoStatusService(id)
+        if (!result) {
+            return res.status(httpStatus.NOT_FOUND).json({
+                message: userMessages.videoStatusNotFound
+            })
+        }
+        return res.json({
+            message: userMessages.videoStatusFound,
+            result
+        })
+    } catch (error) {
+        next(error)
+    }
 }
