@@ -36,6 +36,33 @@ class DatabaseService {
         console.log('MongoDB connection closed')
     }
 
+    async indexUsers() {
+        const alreadyExists = await this.users.indexExists(['email_1', 'username_1', 'email_1_password_1'])
+        if (alreadyExists) return
+        this.users.createIndex({ email: 1 }, { unique: true })
+        this.users.createIndex({ username: 1 }, { unique: true })
+        this.users.createIndex({ email: 1, password: 1 })
+    }
+
+    async indexRefreshTokens() {
+        const alreadyExists = await this.refreshTokens.indexExists(['token_1', 'expires_at_1'])
+        if (alreadyExists) return
+        this.refreshTokens.createIndex({ token: 1 })
+        this.refreshTokens.createIndex({ expires_at: 1 }, { expireAfterSeconds: 0 }) // MongoDb will automatically delete expired refresh tokens
+    }
+
+    async indexVideoStatuses() {
+        const alreadyExists = await this.videoStatuses.indexExists(['name_1'])
+        if (alreadyExists) return
+        this.videoStatuses.createIndex({ name: 1 })
+    }
+
+    async indexFollowers() {
+        const alreadyExists = await this.followers.indexExists('user_id_1_followed_user_id_1')
+        if (alreadyExists) return
+        this.followers.createIndex({ user_id: 1, followed_user_id: 1 })
+    }
+
     get users(): Collection<User> {
         return this.db.collection('users')
     }

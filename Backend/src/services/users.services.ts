@@ -23,6 +23,7 @@ import Follower from '~/models/schemas/Follower.schema'
 import { ErrorsWithStatus } from '~/models/Errors'
 import httpStatus from '~/constants/httpStatus'
 import axios from 'axios'
+import ms from 'ms'
 
 class UsersService {
     private signAccessToken(user_id: string, verify: UserVerifyStatus) {
@@ -118,7 +119,8 @@ class UsersService {
                 ...payload, // Spread the payload to match User schema
                 password: hashedPassword,
                 date_of_birth: new Date(payload.date_of_birth), // Convert date_of_birth to Date object
-                email_verify_token
+                email_verify_token,
+                username: 'user' + crypto.randomBytes(8).toString('hex') // Temporary username, user can change it later
             })
         )
         const user_id = result.insertedId.toString()
@@ -127,7 +129,8 @@ class UsersService {
         await databaseService.refreshTokens.insertOne(
             new RefreshToken({
                 token: refresh_token,
-                user_id: new ObjectId(user_id)
+                user_id: new ObjectId(user_id),
+                expires_at: new Date(Date.now() + ms('7d'))
             })
         )
         return {
@@ -143,7 +146,8 @@ class UsersService {
         await databaseService.refreshTokens.insertOne(
             new RefreshToken({
                 token: refresh_token,
-                user_id: new ObjectId(user_id)
+                user_id: new ObjectId(user_id),
+                expires_at: new Date(Date.now() + ms('7d'))
             })
         )
         return {
@@ -165,8 +169,7 @@ class UsersService {
             const { access_token, refresh_token } = await this.login(user._id.toString(), user.verify)
             return {
                 access_token,
-                refresh_token,
-                newUser: false
+                refresh_token
             }
         }
         // If not, register the user
@@ -178,12 +181,12 @@ class UsersService {
                 confirm_password: '', // Not used in OAuth flow
                 date_of_birth: new Date().toISOString(), // Default to current date, can be updated later
                 avatar: userInfo.picture,
-                verify: UserVerifyStatus.Verified
+                verify: UserVerifyStatus.Verified,
+                username: 'user' + crypto.randomBytes(8).toString('hex') // Temporary username, user can change it later
             })
             return {
                 access_token,
-                refresh_token,
-                newUser: true
+                refresh_token
             }
         }
     }

@@ -9,6 +9,7 @@ export interface RegisterReqBody {
     date_of_birth: string
     avatar?: string
     verify?: UserVerifyStatus
+    username?: string
 }
 
 export interface LogoutReqBody {

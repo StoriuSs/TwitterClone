@@ -66,8 +66,7 @@ export const oauthGoogleController = async (req: Request, res: Response) => {
         sameSite: 'strict',
         maxAge: ms('7d')
     })
-    const urlRedirect =
-        (CLIENT_REDIRECT_URL as string) + `?access_token=${result.access_token}&newUser=${result.newUser}`
+    const urlRedirect = (CLIENT_REDIRECT_URL as string) + `?access_token=${result.access_token}`
     return res.redirect(urlRedirect)
 }
 

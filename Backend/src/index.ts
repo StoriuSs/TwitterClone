@@ -22,7 +22,12 @@ app.use(
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
-databaseService.connect()
+databaseService.connect().then(() => {
+    databaseService.indexUsers()
+    databaseService.indexRefreshTokens()
+    databaseService.indexVideoStatuses()
+    databaseService.indexFollowers()
+})
 
 // Initialize upload folder
 initFolder()
