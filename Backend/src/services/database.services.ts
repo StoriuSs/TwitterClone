@@ -4,6 +4,7 @@ import User from '../models/schemas/User.schema'
 import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import Follower from '~/models/schemas/Follower.schema'
 import VideoStatus from '~/models/schemas/VideoStatus.schema'
+import Tweet from '~/models/schemas/Tweet.schema'
 
 const uri = MONGODB_URI
 
@@ -77,6 +78,10 @@ class DatabaseService {
 
     get videoStatuses(): Collection<VideoStatus> {
         return this.db.collection('video_statuses')
+    }
+
+    get tweets(): Collection<Tweet> {
+        return this.db.collection('tweets')
     }
 }
 

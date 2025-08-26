@@ -12,9 +12,9 @@ export enum TokenType {
 }
 
 export enum MediaType {
-    Image = 'image',
-    Video = 'video',
-    HLS = 'hls'
+    Image,
+    Video,
+    HLS
 }
 
 export enum EncodingStatus {
@@ -22,4 +22,16 @@ export enum EncodingStatus {
     Processing,
     Completed,
     Failed
+}
+
+export enum TweetType {
+    Tweet,
+    Retweet,
+    Comment,
+    QuoteTweet
+}
+
+export enum TweetAudience {
+    Everyone,
+    TwitterCircle
 }

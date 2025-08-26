@@ -76,3 +76,30 @@ export const userMessages = {
     videoStatusFound: 'Video status found',
     videoStatusNotFound: 'Video status not found'
 }
+
+export const tweetMessages = {
+    tweetCreated: 'Tweet created successfully',
+    // tweetNotFound: 'Tweet not found',
+    // tweetUpdated: 'Tweet updated successfully',
+    // tweetDeleted: 'Tweet deleted successfully',
+    // tweetLiked: 'Tweet liked successfully',
+    // tweetUnliked: 'Tweet unliked successfully',
+    // tweetRetweeted: 'Tweet retweeted successfully',
+    // tweetUnretweeted: 'Tweet unretweeted successfully',
+    // tweetReplied: 'Tweet replied successfully',
+    // tweetReplyNotFound: 'Tweet reply not found',
+    // tweetReplyDeleted: 'Tweet reply deleted successfully',
+    // tweetMediaUploaded: 'Tweet media uploaded successfully',
+    // tweetMediaNotFound: 'Tweet media not found',
+    // tweetMediaDeleted: 'Tweet media deleted successfully',
+    tweetTypeInvalid: 'Tweet type is invalid',
+    tweetAudienceInvalid: 'Tweet audience is invalid',
+    tweetParentIdInvalid: 'Parent ID must be a valid tweet ID',
+    tweetParentIdMustBeNull: 'Parent ID must be null for original tweets',
+    tweetContentMustBeString: 'Content must be a string',
+    tweetContentMustNotBeEmpty: 'Content must not be empty',
+    tweetContentMustBeEmpty: 'Content must be empty',
+    hashtagsMustBeArrayOfStrings: 'Hashtags must be an array of strings',
+    mentionsMustBeArrayOfStrings: 'Mentions must be an array of strings',
+    mediasMustBeArrayOfMediaTypes: 'Medias must be an array of media types'
+}

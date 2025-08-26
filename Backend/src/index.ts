@@ -8,6 +8,7 @@ import mediasRouter from './routes/medias.routes'
 import { initFolder } from './utils/file'
 import staticRouter from './routes/static.routes'
 import cors from 'cors'
+import tweetsRouter from './routes/tweets.routes'
 
 const app = express()
 // CORS
@@ -36,6 +37,7 @@ initFolder()
 app.use('/api/users', usersRouter)
 app.use('/api/medias', mediasRouter)
 app.use('/static', staticRouter)
+app.use('/api/tweets', tweetsRouter)
 
 // Error handling middleware
 app.use(errorHandler)
