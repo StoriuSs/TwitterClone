@@ -5,6 +5,7 @@ import RefreshToken from '~/models/schemas/RefreshToken.schema'
 import Follower from '~/models/schemas/Follower.schema'
 import VideoStatus from '~/models/schemas/VideoStatus.schema'
 import Tweet from '~/models/schemas/Tweet.schema'
+import Hashtag from '~/models/schemas/Hashtag.schema'
 
 const uri = MONGODB_URI
 
@@ -82,6 +83,10 @@ class DatabaseService {
 
     get tweets(): Collection<Tweet> {
         return this.db.collection('tweets')
+    }
+
+    get hashtags(): Collection<Hashtag> {
+        return this.db.collection('hashtags')
     }
 }
 

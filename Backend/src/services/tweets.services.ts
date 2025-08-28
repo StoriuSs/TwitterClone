@@ -1,17 +1,33 @@
 import { TweetReqBody } from '~/models/requests/Tweet.requests'
 import databaseService from './database.services'
 import Tweet from '~/models/schemas/Tweet.schema'
-import { ObjectId } from 'mongodb'
+import { ObjectId, WithId } from 'mongodb'
+import Hashtag from '~/models/schemas/Hashtag.schema'
 
 class TweetsService {
+    async findOneAndUpdateHashtags(hashtags: string[]) {
+        const hashtagPromises = await Promise.all(
+            hashtags.map((hashtag) => {
+                // find hashtag in db, if exists, get it, or else create a new one
+                return databaseService.hashtags.findOneAndUpdate(
+                    { name: hashtag },
+                    { $setOnInsert: new Hashtag({ name: hashtag }) },
+                    { upsert: true, returnDocument: 'after' }
+                )
+            })
+        )
+        return hashtagPromises.map((hashtag) => (hashtag as WithId<Hashtag>)._id)
+    }
+
     async createTweet(body: TweetReqBody, user_id: string) {
+        const hashtags = await this.findOneAndUpdateHashtags(body.hashtags)
         await databaseService.tweets.insertOne(
             new Tweet({
                 type: body.type,
                 audience: body.audience,
                 content: body.content,
                 parent_id: body.parent_id ? new ObjectId(body.parent_id) : null,
-                hashtags: [],
+                hashtags,
                 mentions: body.mentions.map((mention) => new ObjectId(mention)),
                 medias: body.medias,
                 user_id: new ObjectId(user_id)
