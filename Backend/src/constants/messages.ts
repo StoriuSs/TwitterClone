@@ -82,8 +82,10 @@ export const tweetMessages = {
     // tweetNotFound: 'Tweet not found',
     // tweetUpdated: 'Tweet updated successfully',
     // tweetDeleted: 'Tweet deleted successfully',
-    // tweetLiked: 'Tweet liked successfully',
-    // tweetUnliked: 'Tweet unliked successfully',
+    tweetLiked: 'Tweet liked successfully',
+    tweetAlreadyLiked: 'Tweet is already liked',
+    tweetNotLiked: 'Tweet is not liked',
+    tweetUnliked: 'Tweet unliked successfully',
     // tweetRetweeted: 'Tweet retweeted successfully',
     // tweetUnretweeted: 'Tweet unretweeted successfully',
     // tweetReplied: 'Tweet replied successfully',
@@ -101,5 +103,9 @@ export const tweetMessages = {
     tweetContentMustBeEmpty: 'Content must be empty',
     hashtagsMustBeArrayOfStrings: 'Hashtags must be an array of strings',
     mentionsMustBeArrayOfStrings: 'Mentions must be an array of strings',
-    mediasMustBeArrayOfMediaTypes: 'Medias must be an array of media types'
+    mediasMustBeArrayOfMediaTypes: 'Medias must be an array of media types',
+    tweetBookmarked: 'Tweet bookmarked successfully',
+    tweetAlreadyBookmarked: 'Tweet is already bookmarked',
+    tweetNotBookmarked: 'Tweet is not bookmarked',
+    tweetUnbookmarked: 'Tweet unbookmarked successfully'
 }

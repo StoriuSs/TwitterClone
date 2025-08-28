@@ -6,7 +6,8 @@ import Follower from '~/models/schemas/Follower.schema'
 import VideoStatus from '~/models/schemas/VideoStatus.schema'
 import Tweet from '~/models/schemas/Tweet.schema'
 import Hashtag from '~/models/schemas/Hashtag.schema'
-
+import Bookmark from '~/models/schemas/Bookmark.schema'
+import Like from '~/models/schemas/Like.schema'
 const uri = MONGODB_URI
 
 class DatabaseService {
@@ -65,6 +66,24 @@ class DatabaseService {
         this.followers.createIndex({ user_id: 1, followed_user_id: 1 })
     }
 
+    async indexLikes() {
+        const alreadyExists = await this.likes.indexExists('user_id_1_tweet_id_1')
+        if (alreadyExists) return
+        this.likes.createIndex({ user_id: 1, tweet_id: 1 })
+    }
+
+    async indexBookmarks() {
+        const alreadyExists = await this.bookmarks.indexExists('user_id_1_tweet_id_1')
+        if (alreadyExists) return
+        this.bookmarks.createIndex({ user_id: 1, tweet_id: 1 })
+    }
+
+    async indexHashtags() {
+        const alreadyExists = await this.hashtags.indexExists('name_1')
+        if (alreadyExists) return
+        this.hashtags.createIndex({ name: 1 }, { unique: true })
+    }
+
     get users(): Collection<User> {
         return this.db.collection('users')
     }
@@ -87,6 +106,14 @@ class DatabaseService {
 
     get hashtags(): Collection<Hashtag> {
         return this.db.collection('hashtags')
+    }
+
+    get bookmarks(): Collection<Bookmark> {
+        return this.db.collection('bookmarks')
+    }
+
+    get likes(): Collection<Like> {
+        return this.db.collection('likes')
     }
 }
 

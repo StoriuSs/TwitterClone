@@ -9,6 +9,8 @@ import { initFolder } from './utils/file'
 import staticRouter from './routes/static.routes'
 import cors from 'cors'
 import tweetsRouter from './routes/tweets.routes'
+import bookmarksRouter from './routes/bookmarks.routes'
+import likesRouter from './routes/likes.routes'
 
 const app = express()
 // CORS
@@ -28,6 +30,9 @@ databaseService.connect().then(() => {
     databaseService.indexRefreshTokens()
     databaseService.indexVideoStatuses()
     databaseService.indexFollowers()
+    databaseService.indexLikes()
+    databaseService.indexBookmarks()
+    databaseService.indexHashtags()
 })
 
 // Initialize upload folder
@@ -38,6 +43,8 @@ app.use('/api/users', usersRouter)
 app.use('/api/medias', mediasRouter)
 app.use('/static', staticRouter)
 app.use('/api/tweets', tweetsRouter)
+app.use('/api/bookmarks', bookmarksRouter)
+app.use('/api/likes', likesRouter)
 
 // Error handling middleware
 app.use(errorHandler)
