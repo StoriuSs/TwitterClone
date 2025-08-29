@@ -5,11 +5,20 @@ import tweetsService from '~/services/tweets.services'
 import { tweetMessages } from '~/constants/messages'
 import { TokenPayload } from '~/models/requests/User.requests'
 import httpStatus from '~/constants/httpStatus'
+import Tweet from '~/models/schemas/Tweet.schema'
 
 export const createTweetController = async (req: Request<ParamsDictionary, any, TweetReqBody>, res: Response) => {
     const { user_id } = req.decoded_authorization as TokenPayload
     await tweetsService.createTweet(req.body, user_id)
     res.status(httpStatus.CREATED).json({
         message: tweetMessages.tweetCreated
+    })
+}
+
+export const getTweetByIdController = async (req: Request, res: Response) => {
+    const tweet = req.tweet as Tweet
+    return res.json({
+        message: tweetMessages.tweetRetrieved,
+        result: tweet
     })
 }

@@ -12,6 +12,7 @@ interface UserType {
     email_verify_token?: string // random token or empty string if email is verified
     forgot_password_token?: string // jwt or empty string if not requested
     verify?: UserVerifyStatus
+    twitter_circle?: ObjectId[]
 
     bio?: string
     location?: string
@@ -33,6 +34,7 @@ export default class User {
     email_verify_token: string
     forgot_password_token: string
     verify: UserVerifyStatus
+    twitter_circle: ObjectId[]
     bio: string
     location: string
     website: string
@@ -41,24 +43,43 @@ export default class User {
     cover_photo: string
     deleted: boolean
 
-    constructor(user: UserType) {
-        this._id = user._id || new ObjectId()
-        this.name = user.name || ''
-        this.email = user.email || ''
-        this.date_of_birth = user.date_of_birth || new Date()
-        this.password = user.password || ''
-        this.created_at = user.created_at || new Date()
-        this.updated_at = user.updated_at || new Date()
-        this.email_verify_token = user.email_verify_token || ''
-        this.forgot_password_token = user.forgot_password_token || ''
-        this.verify = user.verify || UserVerifyStatus.Unverified
-
-        this.bio = user.bio || ''
-        this.location = user.location || ''
-        this.website = user.website || ''
-        this.username = user.username || ''
-        this.avatar = user.avatar || ''
-        this.cover_photo = user.cover_photo || ''
-        this.deleted = user.deleted || false
+    constructor({
+        _id,
+        name,
+        email,
+        date_of_birth,
+        password,
+        created_at,
+        updated_at,
+        email_verify_token,
+        forgot_password_token,
+        verify,
+        twitter_circle,
+        bio,
+        location,
+        website,
+        username,
+        avatar,
+        cover_photo,
+        deleted
+    }: UserType) {
+        this._id = _id || new ObjectId()
+        this.name = name || ''
+        this.email = email
+        this.date_of_birth = date_of_birth || new Date()
+        this.password = password
+        this.created_at = created_at || new Date()
+        this.updated_at = updated_at || new Date()
+        this.email_verify_token = email_verify_token || ''
+        this.forgot_password_token = forgot_password_token || ''
+        this.verify = verify || UserVerifyStatus.Unverified
+        this.twitter_circle = twitter_circle || []
+        this.bio = bio || ''
+        this.location = location || ''
+        this.website = website || ''
+        this.username = username || ''
+        this.avatar = avatar || ''
+        this.cover_photo = cover_photo || ''
+        this.deleted = deleted || false
     }
 }

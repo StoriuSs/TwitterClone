@@ -1,3 +1,4 @@
+import { getTweetByIdValidator } from '~/middlewares/tweets.middleware'
 import { Router } from 'express'
 import { createBookmarkController, deleteBookmarkController } from '~/controllers/bookmarks.controllers'
 import { createBookmarkValidator, deleteBookmarkValidator } from '~/middlewares/bookmarks.middlewares'
@@ -8,6 +9,7 @@ const bookmarksRouter = Router()
 
 bookmarksRouter.post(
     '/',
+    getTweetByIdValidator,
     accessTokenValidator,
     verifiedUserValidator,
     createBookmarkValidator,
@@ -16,6 +18,7 @@ bookmarksRouter.post(
 
 bookmarksRouter.delete(
     '/tweets/:tweet_id',
+    getTweetByIdValidator,
     accessTokenValidator,
     verifiedUserValidator,
     deleteBookmarkValidator,

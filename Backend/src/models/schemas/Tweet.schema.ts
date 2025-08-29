@@ -17,6 +17,7 @@ interface TweetConstructor {
     created_at?: Date
     updated_at?: Date
     deleted?: boolean
+    test?: string
 }
 
 export default class Tweet {
@@ -34,6 +35,7 @@ export default class Tweet {
     created_at: Date
     updated_at: Date
     deleted: boolean
+
     constructor({
         _id,
         user_id,

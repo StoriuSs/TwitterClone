@@ -114,15 +114,14 @@ class UsersService {
     async register(payload: RegisterReqBody) {
         const email_verify_token = crypto.randomBytes(32).toString('hex')
         const hashedPassword = await hashPassword(payload.password)
-        const result = await databaseService.users.insertOne(
-            new User({
-                ...payload, // Spread the payload to match User schema
-                password: hashedPassword,
-                date_of_birth: new Date(payload.date_of_birth), // Convert date_of_birth to Date object
-                email_verify_token,
-                username: 'user' + crypto.randomBytes(8).toString('hex') // Temporary username, user can change it later
-            })
-        )
+        const newUser = new User({
+            ...payload, // Spread the payload to match User schema
+            password: hashedPassword,
+            date_of_birth: new Date(payload.date_of_birth), // Convert date_of_birth to Date object
+            email_verify_token,
+            username: 'user' + crypto.randomBytes(8).toString('hex') // Temporary username, user can change it later,
+        })
+        const result = await databaseService.users.insertOne(newUser)
         const user_id = result.insertedId.toString()
         const [access_token, refresh_token] = await this.signBothTokens(user_id, UserVerifyStatus.Unverified)
         // Store the refresh token in the database

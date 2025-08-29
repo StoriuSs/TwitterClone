@@ -79,21 +79,10 @@ export const userMessages = {
 
 export const tweetMessages = {
     tweetCreated: 'Tweet created successfully',
-    // tweetNotFound: 'Tweet not found',
-    // tweetUpdated: 'Tweet updated successfully',
-    // tweetDeleted: 'Tweet deleted successfully',
     tweetLiked: 'Tweet liked successfully',
     tweetAlreadyLiked: 'Tweet is already liked',
     tweetNotLiked: 'Tweet is not liked',
     tweetUnliked: 'Tweet unliked successfully',
-    // tweetRetweeted: 'Tweet retweeted successfully',
-    // tweetUnretweeted: 'Tweet unretweeted successfully',
-    // tweetReplied: 'Tweet replied successfully',
-    // tweetReplyNotFound: 'Tweet reply not found',
-    // tweetReplyDeleted: 'Tweet reply deleted successfully',
-    // tweetMediaUploaded: 'Tweet media uploaded successfully',
-    // tweetMediaNotFound: 'Tweet media not found',
-    // tweetMediaDeleted: 'Tweet media deleted successfully',
     tweetTypeInvalid: 'Tweet type is invalid',
     tweetAudienceInvalid: 'Tweet audience is invalid',
     tweetParentIdInvalid: 'Parent ID must be a valid tweet ID',
@@ -107,5 +96,10 @@ export const tweetMessages = {
     tweetBookmarked: 'Tweet bookmarked successfully',
     tweetAlreadyBookmarked: 'Tweet is already bookmarked',
     tweetNotBookmarked: 'Tweet is not bookmarked',
-    tweetUnbookmarked: 'Tweet unbookmarked successfully'
+    tweetUnbookmarked: 'Tweet unbookmarked successfully',
+    tweetIdIsRequired: 'Tweet ID is required',
+    tweetIdMustBeMongoId: 'Tweet ID must be a valid MongoDB ObjectId',
+    tweetNotFound: 'Tweet not found',
+    tweetIsNotPublic: 'Tweet is not public',
+    tweetRetrieved: 'Tweet retrieved successfully'
 }

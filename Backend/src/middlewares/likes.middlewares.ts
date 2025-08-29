@@ -8,6 +8,12 @@ export const createLikeValidator = validate(
     checkSchema({
         tweet_id: {
             in: ['body'],
+            notEmpty: {
+                errorMessage: tweetMessages.tweetIdIsRequired
+            },
+            isMongoId: {
+                errorMessage: tweetMessages.tweetIdMustBeMongoId
+            },
             custom: {
                 options: async (value, { req }) => {
                     // check if the user already liked the tweet
@@ -30,6 +36,12 @@ export const deleteLikeValidator = validate(
     checkSchema({
         tweet_id: {
             in: ['params'],
+            notEmpty: {
+                errorMessage: tweetMessages.tweetIdIsRequired
+            },
+            isMongoId: {
+                errorMessage: tweetMessages.tweetIdMustBeMongoId
+            },
             custom: {
                 options: async (value, { req }) => {
                     // check if the user already liked the tweet
