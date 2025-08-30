@@ -218,7 +218,7 @@ export const getTweetByIdValidator = validate(
                                                 input: '$tweet_children',
                                                 as: 'item',
                                                 cond: {
-                                                    $eq: ['$$item.type', 1]
+                                                    $eq: ['$$item.type', TweetType.Retweet]
                                                 }
                                             }
                                         }
@@ -229,7 +229,7 @@ export const getTweetByIdValidator = validate(
                                                 input: '$tweet_children',
                                                 as: 'item',
                                                 cond: {
-                                                    $eq: ['$$item.type', 2]
+                                                    $eq: ['$$item.type', TweetType.Comment]
                                                 }
                                             }
                                         }
@@ -240,7 +240,7 @@ export const getTweetByIdValidator = validate(
                                                 input: '$tweet_children',
                                                 as: 'item',
                                                 cond: {
-                                                    $eq: ['$$item.type', 3]
+                                                    $eq: ['$$item.type', TweetType.QuoteTweet]
                                                 }
                                             }
                                         }
@@ -261,6 +261,39 @@ export const getTweetByIdValidator = validate(
                     return true
                 }
             }
+        }
+    })
+)
+
+export const getTweetChildrenValidator = validate(
+    checkSchema({
+        type: {
+            in: ['query'],
+            isIn: {
+                options: [Object.values(TweetType)],
+                errorMessage: tweetMessages.invalidTweetType
+            }
+        },
+        page: {
+            in: ['query'],
+            isInt: {
+                options: {
+                    min: 1
+                },
+                errorMessage: tweetMessages.invalidPage
+            },
+            toInt: true
+        },
+        limit: {
+            in: ['query'],
+            isInt: {
+                options: {
+                    min: 1,
+                    max: 100
+                },
+                errorMessage: tweetMessages.invalidLimit
+            },
+            toInt: true
         }
     })
 )

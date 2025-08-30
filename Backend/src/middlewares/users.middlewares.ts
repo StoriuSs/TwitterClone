@@ -538,7 +538,7 @@ export const verifiedUserValidator = (req: Request, res: Response, next: NextFun
 
 export const isUserLoggedInValidator = (middleware: any) => {
     return (req: Request, res: Response, next: NextFunction) => {
-        if (req.headers.authorization == 'Bearer') {
+        if (!req.headers.authorization || req.headers.authorization == 'Bearer') {
             // User is not logged in (Bearer token is missing), skip the middleware
             return next()
         }

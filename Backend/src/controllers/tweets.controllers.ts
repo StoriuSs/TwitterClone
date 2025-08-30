@@ -1,12 +1,13 @@
 import { ParamsDictionary } from 'express-serve-static-core'
 import { Request, Response } from 'express'
-import { TweetReqBody } from '~/models/requests/Tweet.requests'
+import { TweetParam, TweetQuery, TweetReqBody } from '~/models/requests/Tweet.requests'
 import tweetsService from '~/services/tweets.services'
 import { tweetMessages } from '~/constants/messages'
 import { TokenPayload } from '~/models/requests/User.requests'
 import httpStatus from '~/constants/httpStatus'
 import Tweet from '~/models/schemas/Tweet.schema'
 import { WithId } from 'mongodb'
+import { TweetType } from '~/constants/enum'
 
 export const createTweetController = async (req: Request<ParamsDictionary, any, TweetReqBody>, res: Response) => {
     const { user_id } = req.decoded_authorization as TokenPayload
@@ -25,7 +26,34 @@ export const getTweetByIdController = async (req: Request, res: Response) => {
         result: {
             ...tweet,
             guest_views: result.guest_views,
-            user_views: result.user_views
+            user_views: result.user_views,
+            updated_at: result.updated_at
+        }
+    })
+}
+
+export const getTweetChildrenController = async (req: Request<TweetParam, any, any, TweetQuery>, res: Response) => {
+    const user = (req.decoded_authorization as TokenPayload) || {}
+    const tweet_id = req.params.tweet_id
+    const tweet_type = Number(req.query.type) as TweetType
+    const page = Number(req.query.page)
+    const limit = Number(req.query.limit)
+
+    const { tweets, totalItems } = await tweetsService.getTweetChildren({
+        user_id: user.user_id,
+        tweet_id,
+        tweet_type,
+        page,
+        limit
+    })
+    return res.json({
+        message: tweetMessages.tweetChildrenRetrieved,
+        result: {
+            tweet_type,
+            totalPages: Math.ceil(totalItems / limit),
+            page,
+            limit,
+            tweets
         }
     })
 }

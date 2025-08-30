@@ -101,5 +101,9 @@ export const tweetMessages = {
     tweetIdMustBeMongoId: 'Tweet ID must be a valid MongoDB ObjectId',
     tweetNotFound: 'Tweet not found',
     tweetIsNotPublic: 'Tweet is not public',
-    tweetRetrieved: 'Tweet retrieved successfully'
+    tweetRetrieved: 'Tweet retrieved successfully',
+    tweetChildrenRetrieved: 'Tweet children retrieved successfully',
+    invalidTweetType: 'Invalid tweet type',
+    invalidPage: 'Invalid page number',
+    invalidLimit: 'Invalid limit: Only 1-100'
 }
