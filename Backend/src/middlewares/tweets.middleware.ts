@@ -244,9 +244,6 @@ export const getTweetByIdValidator = validate(
                                                 }
                                             }
                                         }
-                                    },
-                                    views: {
-                                        $add: ['$user_views', '$guest_views']
                                     }
                                 }
                             },
@@ -271,11 +268,6 @@ export const getTweetByIdValidator = validate(
 export const audienceValidator = wrapRequestHandler(async (req: Request, res: Response, next: NextFunction) => {
     const tweet = req.tweet as Tweet
     if (tweet.audience === TweetAudience.TwitterCircle) {
-        // check if the user is logged in yet
-        if (!req.decoded_authorization) {
-            throw new ErrorsWithStatus(userMessages.accessTokenRequired, httpStatus.UNAUTHORIZED)
-        }
-
         // check if the author's account is valid (not deleted, banned or private)
         const author = await databaseService.users.findOne({
             _id: new ObjectId(tweet.user_id)
@@ -285,12 +277,12 @@ export const audienceValidator = wrapRequestHandler(async (req: Request, res: Re
         }
 
         // check if the user is in the author's Twitter Circle
-        const user_id = req.decoded_authorization.user_id
         const authorTwitterCircle = author.twitter_circle
+        const user = req.decoded_authorization // if the user is not logged in --> this would be undefined --> automatically fail the isInCircle check below
         const isInCircle = authorTwitterCircle.some((user_circle_id: ObjectId) =>
-            new ObjectId(user_circle_id).equals(user_id)
+            new ObjectId(user_circle_id).equals(user?.user_id)
         )
-        if (!isInCircle && !author._id.equals(user_id)) {
+        if (!isInCircle && !author._id.equals(user?.user_id)) {
             throw new ErrorsWithStatus(tweetMessages.tweetIsNotPublic, httpStatus.FORBIDDEN)
         }
     }
