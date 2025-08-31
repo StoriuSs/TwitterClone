@@ -91,8 +91,11 @@ export const tweetMessages = {
     tweetContentMustNotBeEmpty: 'Content must not be empty',
     tweetContentMustBeEmpty: 'Content must be empty',
     hashtagsMustBeArrayOfStrings: 'Hashtags must be an array of strings',
+    hashtagsMustBeEmpty: 'Hashtags must be empty for retweets',
     mentionsMustBeArrayOfStrings: 'Mentions must be an array of strings',
+    mentionsMustBeEmpty: 'Mentions must be empty for retweets',
     mediasMustBeArrayOfMediaTypes: 'Medias must be an array of media types',
+    mediasMustBeEmpty: 'Medias must be empty for retweets',
     tweetBookmarked: 'Tweet bookmarked successfully',
     tweetAlreadyBookmarked: 'Tweet is already bookmarked',
     tweetNotBookmarked: 'Tweet is not bookmarked',
@@ -105,5 +108,6 @@ export const tweetMessages = {
     tweetChildrenRetrieved: 'Tweet children retrieved successfully',
     invalidTweetType: 'Invalid tweet type',
     invalidPage: 'Invalid page number',
-    invalidLimit: 'Invalid limit: Only 1-100'
+    invalidLimit: 'Invalid limit: Only 1-100',
+    newsFeedRetrieved: 'News feed retrieved successfully'
 }

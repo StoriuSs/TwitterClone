@@ -82,11 +82,15 @@ export const createTweetValidator = validate(
                 errorMessage: tweetMessages.hashtagsMustBeArrayOfStrings
             },
             custom: {
-                options: (value) => {
+                options: (value, { req }) => {
                     if (!isEmpty(value)) {
                         if (value.some((hashtag: any) => typeof hashtag !== 'string')) {
                             throw new Error(tweetMessages.hashtagsMustBeArrayOfStrings)
                         }
+                    }
+                    // if the type is retweet, there should be no hashtags
+                    if (req.body.type === TweetType.Retweet && !isEmpty(value)) {
+                        throw new Error(tweetMessages.hashtagsMustBeEmpty)
                     }
                     return true
                 }
@@ -98,11 +102,15 @@ export const createTweetValidator = validate(
                 errorMessage: tweetMessages.mentionsMustBeArrayOfStrings
             },
             custom: {
-                options: (value) => {
+                options: (value, { req }) => {
                     if (!isEmpty(value)) {
                         if (value.some((mention: any) => typeof mention !== 'string')) {
                             throw new Error(tweetMessages.mentionsMustBeArrayOfStrings)
                         }
+                    }
+                    // if the type is retweet, there should be no mentions
+                    if (req.body.type === TweetType.Retweet && !isEmpty(value)) {
+                        throw new Error(tweetMessages.mentionsMustBeEmpty)
                     }
                     return true
                 }
@@ -114,7 +122,7 @@ export const createTweetValidator = validate(
                 errorMessage: tweetMessages.mediasMustBeArrayOfMediaTypes
             },
             custom: {
-                options: (value) => {
+                options: (value, { req }) => {
                     if (!isEmpty(value)) {
                         if (
                             value.some((item: any) => {
@@ -123,6 +131,10 @@ export const createTweetValidator = validate(
                         ) {
                             throw new Error(tweetMessages.mediasMustBeArrayOfMediaTypes)
                         }
+                    }
+                    // if the type is retweet, there should be no medias
+                    if (req.body.type === TweetType.Retweet && !isEmpty(value)) {
+                        throw new Error(tweetMessages.mediasMustBeEmpty)
                     }
                     return true
                 }
@@ -273,7 +285,12 @@ export const getTweetChildrenValidator = validate(
                 options: [Object.values(TweetType)],
                 errorMessage: tweetMessages.invalidTweetType
             }
-        },
+        }
+    })
+)
+
+export const paginationValidator = validate(
+    checkSchema({
         page: {
             in: ['query'],
             isInt: {

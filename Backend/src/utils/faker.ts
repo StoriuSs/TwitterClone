@@ -52,6 +52,7 @@ const insertMultipleUsers = async (users: RegisterReqBody[]) => {
         const hashedPassword = await hashPassword(user.password)
         await databaseService.users.insertOne(
             new User({
+                _id: user_id,
                 ...user,
                 username: `user${user_id.toString()}`,
                 password: hashedPassword,
@@ -96,10 +97,7 @@ const insertMultipleTweets = async (user_ids: ObjectId[]) => {
     console.log(`Created ${count} tweets`)
 }
 
-insertMultipleUsers(users)
-    .then((user_ids) => {
-        Promise.all([followMultipleUsers(new ObjectId(MYID), user_ids), insertMultipleTweets(user_ids)]).catch((err) =>
-            console.error('Error in follow or tweet operations:', err)
-        )
-    })
-    .catch((err) => console.error('Error in user creation:', err))
+insertMultipleUsers(users).then((user_ids) => {
+    followMultipleUsers(new ObjectId(MYID), user_ids)
+    insertMultipleTweets(user_ids)
+})

@@ -3,7 +3,7 @@ import databaseService from './database.services'
 import Tweet from '~/models/schemas/Tweet.schema'
 import { ObjectId, WithId } from 'mongodb'
 import Hashtag from '~/models/schemas/Hashtag.schema'
-import { TweetType } from '~/constants/enum'
+import { NewsFeedType, TweetType } from '~/constants/enum'
 
 class TweetsService {
     async findOneAndUpdateHashtags(hashtags: string[]) {
@@ -78,6 +78,12 @@ class TweetsService {
                         parent_id: new ObjectId(tweet_id),
                         type: tweet_type
                     }
+                },
+                {
+                    $skip: (page - 1) * limit
+                },
+                {
+                    $limit: limit
                 },
                 {
                     $lookup: {
@@ -180,12 +186,6 @@ class TweetsService {
                     $project: {
                         tweet_children: 0
                     }
-                },
-                {
-                    $skip: (page - 1) * limit
-                },
-                {
-                    $limit: limit
                 }
             ])
             .toArray()
@@ -220,6 +220,290 @@ class TweetsService {
             tweets,
             totalItems
         }
+    }
+
+    async getNewsFeedAdvanced({
+        user_id,
+        page,
+        limit,
+        source
+    }: {
+        user_id: string
+        page: number
+        limit: number
+        source: NewsFeedType
+    }) {
+        console.log(source)
+        const user_id_obj = new ObjectId(user_id)
+
+        // Base aggregation pipeline
+        const pipeline: any[] = []
+
+        // Step 1: Determine which tweets to include based on source
+        if (source === NewsFeedType.Following) {
+            // Get followed user IDs
+            const followed_user_ids = await databaseService.followers
+                .find({ user_id: user_id_obj }, { projection: { followed_user_id: 1 } })
+                .toArray()
+            const ids = followed_user_ids.map((item) => item.followed_user_id)
+            ids.push(user_id_obj) // include self id
+
+            pipeline.push({
+                $match: {
+                    user_id: { $in: ids },
+                    type: { $in: [TweetType.Tweet, TweetType.QuoteTweet, TweetType.Retweet] }
+                }
+            })
+        } else {
+            // "For You" algorithm - includes followed users' tweets + some popular tweets
+            // Get followed user IDs
+            const followed_user_ids = await databaseService.followers
+                .find({ user_id: user_id_obj }, { projection: { followed_user_id: 1 } })
+                .toArray()
+            const followed_ids = followed_user_ids.map((item) => item.followed_user_id)
+            followed_ids.push(user_id_obj) // include self id
+
+            // Use $facet to combine two different tweet sources
+            pipeline.push(
+                {
+                    $facet: {
+                        followedTweets: [
+                            {
+                                $match: {
+                                    user_id: { $in: followed_ids },
+                                    type: { $in: [TweetType.Tweet, TweetType.QuoteTweet, TweetType.Retweet] },
+                                    created_at: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } // Last 7 days
+                                }
+                            },
+                            { $limit: Math.ceil(limit * 0.7) } // 70% from followed users
+                        ],
+                        popularTweets: [
+                            {
+                                $match: {
+                                    user_id: { $nin: followed_ids }, // Exclude already followed users
+                                    type: { $in: [TweetType.Tweet, TweetType.QuoteTweet] },
+                                    created_at: { $gte: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) } // Last 3 days
+                                }
+                            },
+                            // Simple popularity metric: likes + retweets
+                            {
+                                $lookup: {
+                                    from: 'likes',
+                                    localField: '_id',
+                                    foreignField: 'tweet_id',
+                                    as: 'likes_array'
+                                }
+                            },
+                            {
+                                $lookup: {
+                                    from: 'tweets',
+                                    localField: '_id',
+                                    foreignField: 'parent_id',
+                                    as: 'retweets_array'
+                                }
+                            },
+                            {
+                                $addFields: {
+                                    popularity_score: {
+                                        $add: [
+                                            { $size: '$likes_array' },
+                                            {
+                                                $size: {
+                                                    $filter: {
+                                                        input: '$retweets_array',
+                                                        as: 'item',
+                                                        cond: { $eq: ['$$item.type', TweetType.Retweet] }
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            { $sort: { popularity_score: -1 } },
+                            { $limit: Math.ceil(limit * 0.3) } // 30% from popular tweets
+                        ]
+                    }
+                },
+                // Combine the results
+                {
+                    $project: {
+                        tweets: { $concatArrays: ['$followedTweets', '$popularTweets'] }
+                    }
+                },
+                { $unwind: '$tweets' },
+                { $replaceRoot: { newRoot: '$tweets' } }
+            )
+        }
+
+        // Step 2: Join with user collection
+        pipeline.push(
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'user_id',
+                    foreignField: '_id',
+                    as: 'user'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$user'
+                }
+            }
+        )
+
+        // Step 3: Filter by audience
+        pipeline.push({
+            $match: {
+                $or: [
+                    { audience: 0 }, // Everyone
+                    {
+                        $and: [
+                            { audience: 1 }, // Twitter Circle
+                            { 'user.twitter_circle': { $in: [user_id_obj] } }
+                        ]
+                    }
+                ]
+            }
+        })
+
+        // Step 4: Sort by recency (most recent first)
+        pipeline.push({ $sort: { created_at: -1 } })
+
+        // Step 5: Pagination
+        pipeline.push({ $skip: (page - 1) * limit }, { $limit: limit })
+
+        // Step 6: Enrich with related data
+        pipeline.push(
+            // Hashtags
+            {
+                $lookup: {
+                    from: 'hashtags',
+                    localField: 'hashtags',
+                    foreignField: '_id',
+                    as: 'hashtags'
+                }
+            },
+            // Mentions
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'mentions',
+                    foreignField: '_id',
+                    as: 'mentions'
+                }
+            },
+            {
+                $addFields: {
+                    mentions: {
+                        $map: {
+                            input: '$mentions',
+                            as: 'mention',
+                            in: {
+                                _id: '$$mention._id',
+                                name: '$$mention.name'
+                            }
+                        }
+                    }
+                }
+            },
+            // Bookmarks
+            {
+                $lookup: {
+                    from: 'bookmarks',
+                    localField: '_id',
+                    foreignField: 'tweet_id',
+                    as: 'bookmarks'
+                }
+            },
+            // Likes
+            {
+                $lookup: {
+                    from: 'likes',
+                    localField: '_id',
+                    foreignField: 'tweet_id',
+                    as: 'likes'
+                }
+            },
+            // Has user bookmarked/liked
+            {
+                $addFields: {
+                    bookmarked: {
+                        $in: [user_id_obj, '$bookmarks.user_id']
+                    },
+                    liked: {
+                        $in: [user_id_obj, '$likes.user_id']
+                    }
+                }
+            },
+            // Children tweets (for counts)
+            {
+                $lookup: {
+                    from: 'tweets',
+                    localField: '_id',
+                    foreignField: 'parent_id',
+                    as: 'tweet_children'
+                }
+            },
+            // Add counts
+            {
+                $addFields: {
+                    bookmarks: { $size: '$bookmarks' },
+                    likes: { $size: '$likes' },
+                    retweet_count: {
+                        $size: {
+                            $filter: {
+                                input: '$tweet_children',
+                                as: 'item',
+                                cond: { $eq: ['$$item.type', TweetType.Retweet] }
+                            }
+                        }
+                    },
+                    comment_count: {
+                        $size: {
+                            $filter: {
+                                input: '$tweet_children',
+                                as: 'item',
+                                cond: { $eq: ['$$item.type', TweetType.Comment] }
+                            }
+                        }
+                    },
+                    quote_count: {
+                        $size: {
+                            $filter: {
+                                input: '$tweet_children',
+                                as: 'item',
+                                cond: { $eq: ['$$item.type', TweetType.QuoteTweet] }
+                            }
+                        }
+                    }
+                }
+            },
+            // Project final shape
+            {
+                $project: {
+                    bookmarks: 1,
+                    likes: 1,
+                    bookmarked: 1,
+                    liked: 1,
+                    user: {
+                        _id: 1,
+                        name: 1,
+                        username: 1,
+                        avatar: 1,
+                        verify: 1
+                    }
+                }
+            }
+        )
+
+        // Execute aggregation pipeline
+        const tweets = await databaseService.tweets.aggregate(pipeline).toArray()
+
+        // Don't handle increasing views here, let client do that
+        console.log(tweets.length)
+        return tweets
     }
 }
 

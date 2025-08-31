@@ -1,6 +1,6 @@
 import { ParamsDictionary } from 'express-serve-static-core'
 import { Request, Response } from 'express'
-import { TweetParam, TweetQuery, TweetReqBody } from '~/models/requests/Tweet.requests'
+import { NewsFeedQuery, TweetParam, TweetQuery, TweetReqBody } from '~/models/requests/Tweet.requests'
 import tweetsService from '~/services/tweets.services'
 import { tweetMessages } from '~/constants/messages'
 import { TokenPayload } from '~/models/requests/User.requests'
@@ -54,6 +54,28 @@ export const getTweetChildrenController = async (req: Request<TweetParam, any, a
             page,
             limit,
             tweets
+        }
+    })
+}
+
+export const getNewsFeedController = async (req: Request<ParamsDictionary, any, any, NewsFeedQuery>, res: Response) => {
+    const user = (req.decoded_authorization as TokenPayload) || {}
+    const page = Number(req.query.page)
+    const limit = Number(req.query.limit)
+    const source = req.query.source
+
+    const result = await tweetsService.getNewsFeedAdvanced({
+        user_id: user.user_id,
+        page,
+        limit,
+        source
+    })
+    return res.json({
+        message: tweetMessages.newsFeedRetrieved,
+        result: {
+            page,
+            limit,
+            result
         }
     })
 }

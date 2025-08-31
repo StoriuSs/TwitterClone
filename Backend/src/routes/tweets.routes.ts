@@ -4,13 +4,15 @@ import { wrapRequestHandler } from '~/utils/handler'
 import {
     createTweetController,
     getTweetByIdController,
-    getTweetChildrenController
+    getTweetChildrenController,
+    getNewsFeedController
 } from '~/controllers/tweets.controllers'
 import {
     audienceValidator,
     createTweetValidator,
     getTweetByIdValidator,
-    getTweetChildrenValidator
+    getTweetChildrenValidator,
+    paginationValidator
 } from '~/middlewares/tweets.middleware'
 
 const tweetsRouter = Router()
@@ -35,10 +37,20 @@ tweetsRouter.get(
 tweetsRouter.get(
     '/:tweet_id/children',
     getTweetByIdValidator,
+    paginationValidator,
     getTweetChildrenValidator,
     isUserLoggedInValidator(accessTokenValidator),
     isUserLoggedInValidator(verifiedUserValidator),
     audienceValidator,
     wrapRequestHandler(getTweetChildrenController)
+)
+
+tweetsRouter.get(
+    '/',
+    paginationValidator,
+    isUserLoggedInValidator(accessTokenValidator),
+    isUserLoggedInValidator(verifiedUserValidator),
+    // the audienceValidator is not here because the aggregation in the controller handles which tweet to show
+    wrapRequestHandler(getNewsFeedController)
 )
 export default tweetsRouter

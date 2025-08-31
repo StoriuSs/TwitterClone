@@ -36,3 +36,8 @@ export enum TweetAudience {
     Everyone,
     TwitterCircle
 }
+
+export enum NewsFeedType {
+    ForYou = 'for-you',
+    Following = 'following'
+}

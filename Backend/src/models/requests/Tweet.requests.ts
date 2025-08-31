@@ -1,5 +1,5 @@
 import { ParamsDictionary, Query } from 'express-serve-static-core'
-import { TweetAudience, TweetType } from '~/constants/enum'
+import { NewsFeedType, TweetAudience, TweetType } from '~/constants/enum'
 import { Media } from '../schemas/Media.schema'
 
 export interface TweetReqBody {
@@ -16,8 +16,14 @@ export interface TweetParam extends ParamsDictionary {
     tweet_id: string
 }
 
-export interface TweetQuery extends Query {
+export interface Pagination {
     page: string
     limit: string
+}
+export interface TweetQuery extends Query, Pagination {
     tweet_type: string
+}
+
+export interface NewsFeedQuery extends Pagination {
+    source: NewsFeedType
 }
