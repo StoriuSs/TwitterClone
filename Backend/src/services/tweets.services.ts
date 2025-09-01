@@ -39,7 +39,7 @@ class TweetsService {
     async increaseViews(tweet_id: string, user_id?: string) {
         const incType = user_id ? { user_views: 1 } : { guest_views: 1 }
         const result = await databaseService.tweets.findOneAndUpdate(
-            { _id: new ObjectId(tweet_id) },
+            { _id: new ObjectId(tweet_id), deleted: false },
             {
                 $inc: incType,
                 $currentDate: {
@@ -76,7 +76,8 @@ class TweetsService {
                 {
                     $match: {
                         parent_id: new ObjectId(tweet_id),
-                        type: tweet_type
+                        type: tweet_type,
+                        deleted: false
                     }
                 },
                 {
@@ -96,8 +97,15 @@ class TweetsService {
                 {
                     $lookup: {
                         from: 'users',
-                        localField: 'mentions',
-                        foreignField: '_id',
+                        let: { mentionIds: '$mentions' },
+                        pipeline: [
+                            {
+                                $match: {
+                                    $expr: { $in: ['$_id', '$$mentionIds'] },
+                                    deleted: false
+                                }
+                            }
+                        ],
                         as: 'mentions'
                     }
                 },
@@ -195,7 +203,8 @@ class TweetsService {
         const [totalItems] = await Promise.all([
             databaseService.tweets.countDocuments({
                 parent_id: new ObjectId(tweet_id),
-                type: tweet_type
+                type: tweet_type,
+                deleted: false
             }),
             databaseService.tweets.updateMany(
                 { _id: { $in: ids } },
@@ -251,7 +260,8 @@ class TweetsService {
             pipeline.push({
                 $match: {
                     user_id: { $in: ids },
-                    type: { $in: [TweetType.Tweet, TweetType.QuoteTweet, TweetType.Retweet] }
+                    type: { $in: [TweetType.Tweet, TweetType.QuoteTweet, TweetType.Retweet] },
+                    deleted: false
                 }
             })
         } else {
@@ -272,7 +282,8 @@ class TweetsService {
                                 $match: {
                                     user_id: { $in: followed_ids },
                                     type: { $in: [TweetType.Tweet, TweetType.QuoteTweet, TweetType.Retweet] },
-                                    created_at: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } // Last 7 days
+                                    created_at: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }, // Last 7 days
+                                    deleted: false
                                 }
                             },
                             { $limit: Math.ceil(limit * 0.7) } // 70% from followed users
@@ -282,7 +293,8 @@ class TweetsService {
                                 $match: {
                                     user_id: { $nin: followed_ids }, // Exclude already followed users
                                     type: { $in: [TweetType.Tweet, TweetType.QuoteTweet] },
-                                    created_at: { $gte: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) } // Last 3 days
+                                    created_at: { $gte: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) }, // Last 3 days
+                                    deleted: false
                                 }
                             },
                             // Simple popularity metric: likes + retweets
@@ -341,8 +353,15 @@ class TweetsService {
             {
                 $lookup: {
                     from: 'users',
-                    localField: 'user_id',
-                    foreignField: '_id',
+                    let: { userId: '$user_id' },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: { $eq: ['$_id', '$$userId'] },
+                                deleted: false
+                            }
+                        }
+                    ],
                     as: 'user'
                 }
             },

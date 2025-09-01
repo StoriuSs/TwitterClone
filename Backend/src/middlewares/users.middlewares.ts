@@ -131,7 +131,8 @@ export const loginValidator = validate(
             custom: {
                 options: async (value, { req }) => {
                     const user = await databaseService.users.findOne({
-                        email: value
+                        email: value,
+                        deleted: false
                     })
                     // If user is not found, throw an error
                     if (user === null) {

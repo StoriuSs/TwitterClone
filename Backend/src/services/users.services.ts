@@ -107,7 +107,7 @@ class UsersService {
     }
 
     async emailExists(email: string) {
-        const user = await databaseService.users.findOne({ email })
+        const user = await databaseService.users.findOne({ email, deleted: false })
         return !!user
     }
 
@@ -162,7 +162,7 @@ class UsersService {
             throw new ErrorsWithStatus(userMessages.gmailNotVerified, httpStatus.BAD_REQUEST)
         }
         // check if user already exist
-        const user = await databaseService.users.findOne({ email: userInfo.email })
+        const user = await databaseService.users.findOne({ email: userInfo.email, deleted: false })
         // If user exists, login the user
         if (user) {
             const { access_token, refresh_token } = await this.login(user._id.toString(), user.verify)
@@ -201,7 +201,7 @@ class UsersService {
 
     async verifyEmail(user_id: string) {
         await databaseService.users.updateOne(
-            { _id: new ObjectId(user_id) },
+            { _id: new ObjectId(user_id), deleted: false },
             {
                 $set: {
                     email_verify_token: '',
@@ -226,7 +226,7 @@ class UsersService {
     async resendVerifyEmail(user_id: string) {
         const email_verify_token = crypto.randomBytes(32).toString('hex')
         await databaseService.users.updateOne(
-            { _id: new ObjectId(user_id) },
+            { _id: new ObjectId(user_id), deleted: false },
             {
                 $set: {
                     email_verify_token
@@ -245,7 +245,7 @@ class UsersService {
     async forgotPassword(user_id: string, verify: UserVerifyStatus) {
         const forgot_password_token = this.signForgotPasswordToken(user_id, verify)
         await databaseService.users.updateOne(
-            { _id: new ObjectId(user_id) },
+            { _id: new ObjectId(user_id), deleted: false },
             {
                 $set: {
                     forgot_password_token
@@ -279,7 +279,7 @@ class UsersService {
     async resetPassword(forgot_password_token: string, password: string) {
         const hashedPassword = await hashPassword(password)
         await databaseService.users.updateOne(
-            { forgot_password_token },
+            { forgot_password_token, deleted: false },
             {
                 $set: {
                     password: hashedPassword,
@@ -337,7 +337,7 @@ class UsersService {
 
     async getMe(user_id: string) {
         const user = await databaseService.users.findOne(
-            { _id: new ObjectId(user_id) },
+            { _id: new ObjectId(user_id), deleted: false },
             {
                 // projection is used to exclude sensitive fields
                 projection: {
@@ -386,7 +386,7 @@ class UsersService {
 
     async getProfile(username: string) {
         const user = await databaseService.users.findOne(
-            { username },
+            { username, deleted: false },
             {
                 projection: {
                     password: 0,

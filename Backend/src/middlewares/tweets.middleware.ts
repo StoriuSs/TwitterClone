@@ -159,7 +159,8 @@ export const getTweetByIdValidator = validate(
                         .aggregate<Tweet>([
                             {
                                 $match: {
-                                    _id: new ObjectId(value)
+                                    _id: new ObjectId(value),
+                                    deleted: false
                                 }
                             },
                             {
@@ -173,8 +174,15 @@ export const getTweetByIdValidator = validate(
                             {
                                 $lookup: {
                                     from: 'users',
-                                    localField: 'mentions',
-                                    foreignField: '_id',
+                                    let: { mentionIds: '$mentions' },
+                                    pipeline: [
+                                        {
+                                            $match: {
+                                                $expr: { $in: ['$_id', '$$mentionIds'] },
+                                                deleted: false
+                                            }
+                                        }
+                                    ],
                                     as: 'mentions'
                                 }
                             },
