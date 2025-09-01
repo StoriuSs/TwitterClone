@@ -1,0 +1,1304 @@
+openapi: 3.0.4
+info:
+    title: Twitter Clone API
+    description: API documentation for Twitter Clone backend
+    version: 1.0.0
+    contact:
+        name: StoriuSs
+servers:
+    - url: http://localhost:4000/api
+      description: Development server
+paths:
+    /users/register:
+        post:
+            tags:
+                - Users
+            summary: Register a new user
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/RegisterRequest'
+            responses:
+                '201':
+                    description: User registered successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: User registered successfully
+                                    result:
+                                        type: object
+                                        properties:
+                                            access_token:
+                                                type: string
+                                                example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjhiNTViYzQxYmZjNDgyZTUwNzliZTZiIiwidmVyaWZ5IjowLCJ0b2tlbl90eXBlIjowLCJpYXQiOjE3NTY3MTU5NzIsImV4cCI6MTc1NjcxNjg3Mn0.TbfXtK9oQKQmwydxrQu92nX6vBfrxkWZnsdVchZJH7s
+                                            email_verify_token:
+                                                type: string
+                                                example: e12c8d3c89f965f107f0e474797681639e3e4d580ad065b458149106ca1dfa91
+                '422':
+                    description: Unprocessable Entity
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                            examples:
+                                password_mismatch:
+                                    summary: Passwords don't match
+                                    value:
+                                        message: 'Validation failed'
+                                        errors:
+                                            confirm_password:
+                                                type: 'field'
+                                                value: 'hehe123-3'
+                                                msg: 'Passwords must match'
+                                                path: 'confirm_password'
+                                                location: 'body'
+                                email_exists:
+                                    summary: Email already exists
+                                    value:
+                                        message: 'Validation failed'
+                                        errors:
+                                            email:
+                                                type: 'field'
+                                                value: 'test@example.com'
+                                                msg: 'Email already exists'
+                                                path: 'email'
+                                                location: 'body'
+    /users/login:
+        post:
+            tags:
+                - Users
+            summary: Login a user
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                email:
+                                    type: string
+                                    format: email
+                                password:
+                                    type: string
+                            required:
+                                - email
+                                - password
+            responses:
+                '200':
+                    description: Login successful
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    access_token:
+                                        type: string
+                                    refresh_token:
+                                        type: string
+                '400':
+                    description: Validation error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                            examples:
+                                invalid_email:
+                                    summary: Email not found
+                                    value:
+                                        message: 'Validation failed'
+                                        errors:
+                                            email:
+                                                type: 'field'
+                                                value: 'nonexistent@example.com'
+                                                msg: 'Email not found'
+                                                path: 'email'
+                                                location: 'body'
+                                wrong_password:
+                                    summary: Incorrect password
+                                    value:
+                                        message: 'Validation failed'
+                                        errors:
+                                            password:
+                                                type: 'field'
+                                                value: 'incorrectPassword123'
+                                                msg: 'Password is incorrect'
+                                                path: 'password'
+                                                location: 'body'
+    /users/oauth/google:
+        get:
+            tags:
+                - Users
+            summary: OAuth with Google
+            parameters:
+                - name: code
+                  in: query
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                '200':
+                    description: OAuth successful
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    access_token:
+                                        type: string
+                                    refresh_token:
+                                        type: string
+                            examples:
+                                success:
+                                    summary: Successful Google OAuth
+                                    value:
+                                        access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjhiNTViYzQxYmZjNDgyZTUwNzliZTZiIiwidmVyaWZ5IjoxLCJ0b2tlbl90eXBlIjowLCJpYXQiOjE3NTY3MTU5NzIsImV4cCI6MTc1NjcxNjg3Mn0.Abcdeg1234'
+                                        refresh_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjhiNTViYzQxYmZjNDgyZTUwNzliZTZiIiwidmVyaWZ5IjoxLCJ0b2tlbl90eXBlIjoxLCJpYXQiOjE3NTY3MTU5NzIsImV4cCI6MTc1NjcxNjg3Mn0.EfghIj5678'
+                '400':
+                    description: Error with OAuth
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                            examples:
+                                unverified_gmail:
+                                    summary: Gmail account not verified
+                                    value:
+                                        message: 'Error with OAuth'
+                                        errors:
+                                            email:
+                                                type: 'field'
+                                                value: 'user@gmail.com'
+                                                msg: 'Gmail account is not verified'
+                                                path: 'email'
+                                                location: 'google'
+    /users/logout:
+        post:
+            tags:
+                - Users
+            summary: Logout a user
+            security:
+                - BearerAuth: []
+                - CookieAuth: []
+            responses:
+                '200':
+                    description: Logout successful
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                            examples:
+                                success:
+                                    summary: Successful logout
+                                    value:
+                                        message: 'Logged out successfully'
+                '401':
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                            examples:
+                                invalid_token:
+                                    summary: Invalid authentication token
+                                    value:
+                                        message: 'Unauthorized'
+                                        errors:
+                                            token:
+                                                type: 'auth'
+                                                msg: 'Invalid or expired access token'
+                                                path: 'authorization'
+                                                location: 'header'
+    /users/verify-email/{token}:
+        get:
+            tags:
+                - Users
+            summary: Verify user email
+            parameters:
+                - name: token
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                '200':
+                    description: Email verified successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    access_token:
+                                        type: string
+                                    refresh_token:
+                                        type: string
+                            examples:
+                                success:
+                                    summary: Email successfully verified
+                                    value:
+                                        access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NWQxZjI0YWI3NTQxYzUzY2I0NTIzMzYiLCJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiaWF0IjoxNzA4MjM5OTQ2LCJleHAiOjE3MDgyNDM1NDZ9.MFpUfOGmAjZ5LTARQbXs0TJtfhrIA3GoP5jHVHE9cJM'
+                                        refresh_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NWQxZjI0YWI3NTQxYzUzY2I0NTIzMzYiLCJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImlhdCI6MTcwODIzOTk0NiwiZXhwIjoxNzA4ODQ0NzQ2fQ.4HBY5AUF8G4qUcmK7bUXtOUufoQkf5cII8jdCwa5uNw'
+                '400':
+                    description: Invalid token
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                            examples:
+                                expired_token:
+                                    summary: Email verification token expired
+                                    value:
+                                        message: 'Invalid verification token'
+                                        errors:
+                                            token:
+                                                type: 'token'
+                                                value: 'abcdef123456'
+                                                msg: 'Verification token is expired or invalid'
+                                                path: 'token'
+                                                location: 'params'
+    /users/resend-verify-email:
+        post:
+            tags:
+                - Users
+            summary: Resend verification email
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Verification email sent
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                    email_verify_token:
+                                        type: string
+                            examples:
+                                success:
+                                    summary: Email verification sent successfully
+                                    value:
+                                        message: 'Email verification sent'
+                                        email_verify_token: 'abc123def456ghi789' # Only shown in development
+                '401':
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                            examples:
+                                unauthorized:
+                                    summary: Not authenticated
+                                    value:
+                                        message: 'Unauthorized'
+                                        errors:
+                                            token:
+                                                type: 'auth'
+                                                msg: 'You must be logged in to resend verification email'
+                                                path: 'authorization'
+                                                location: 'header'
+    /users/forgot-password:
+        post:
+            tags:
+                - Users
+            summary: Request password reset
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                email:
+                                    type: string
+                                    format: email
+                            required:
+                                - email
+            responses:
+                '200':
+                    description: Password reset email sent
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                    forgot_password_token:
+                                        type: string
+                            examples:
+                                success:
+                                    summary: Password reset email sent successfully
+                                    value:
+                                        message: 'Password reset email sent'
+                                        forgot_password_token: 'xyz789abc456def123' # Only shown in development
+                '400':
+                    description: Email not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                            examples:
+                                email_not_found:
+                                    summary: Email address not found
+                                    value:
+                                        message: 'Email not found'
+                                        errors:
+                                            email:
+                                                type: 'field'
+                                                value: 'nonexistent@example.com'
+                                                msg: 'Email does not exist in our system'
+                                                path: 'email'
+                                                location: 'body'
+    /users/verify-forgot-password/{token}:
+        get:
+            tags:
+                - Users
+            summary: Verify forgot password token
+            parameters:
+                - name: token
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                '200':
+                    description: Token verified successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                            examples:
+                                success:
+                                    summary: Password reset token verified
+                                    value:
+                                        message: 'Token verified successfully'
+                '400':
+                    description: Invalid token
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                            examples:
+                                expired_token:
+                                    summary: Password reset token expired
+                                    value:
+                                        message: 'Invalid token'
+                                        errors:
+                                            token:
+                                                type: 'token'
+                                                value: 'xyz123abc456'
+                                                msg: 'Password reset token is expired or invalid'
+                                                path: 'token'
+                                                location: 'params'
+    /users/reset-password:
+        post:
+            tags:
+                - Users
+            summary: Reset password
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                forgot_password_token:
+                                    type: string
+                                password:
+                                    type: string
+                                confirm_password:
+                                    type: string
+                            required:
+                                - forgot_password_token
+                                - password
+                                - confirm_password
+            responses:
+                '200':
+                    description: Password reset successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                            examples:
+                                success:
+                                    summary: Password reset successful
+                                    value:
+                                        message: 'Password has been reset successfully'
+                '400':
+                    description: Invalid token or passwords don't match
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                            examples:
+                                password_mismatch:
+                                    summary: Passwords don't match
+                                    value:
+                                        message: "Passwords don't match"
+                                        errors:
+                                            confirm_password:
+                                                type: 'field'
+                                                value: '********'
+                                                msg: 'Passwords do not match'
+                                                path: 'confirm_password'
+                                                location: 'body'
+                                invalid_token:
+                                    summary: Invalid reset token
+                                    value:
+                                        message: 'Invalid token'
+                                        errors:
+                                            forgot_password_token:
+                                                type: 'token'
+                                                value: 'abc123def456'
+                                                msg: 'Password reset token is invalid or expired'
+                                                path: 'forgot_password_token'
+                                                location: 'body'
+    /users/refresh-token:
+        post:
+            tags:
+                - Users
+            summary: Refresh access token
+            security:
+                - CookieAuth: []
+            responses:
+                '200':
+                    description: Tokens refreshed
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    new_access_token:
+                                        type: string
+                                    new_refresh_token:
+                                        type: string
+                                    expiresIn:
+                                        type: integer
+                            examples:
+                                success:
+                                    summary: Tokens refreshed successfully
+                                    value:
+                                        new_access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NWQxZjI0YWI3NTQxYzUzY2I0NTIzMzYiLCJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiaWF0IjoxNzA4MjM5OTQ2LCJleHAiOjE3MDgyNDM1NDZ9.MFpUfOGmAjZ5LTARQbXs0TJtfhrIA3GoP5jHVHE9cJM'
+                                        new_refresh_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NWQxZjI0YWI3NTQxYzUzY2I0NTIzMzYiLCJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImlhdCI6MTcwODIzOTk0NiwiZXhwIjoxNzA4ODQ0NzQ2fQ.4HBY5AUF8G4qUcmK7bUXtOUufoQkf5cII8jdCwa5uNw'
+                                        expiresIn: 3600
+                '401':
+                    description: Invalid refresh token
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                            examples:
+                                invalid_token:
+                                    summary: Invalid refresh token
+                                    value:
+                                        message: 'Invalid refresh token'
+                                        errors:
+                                            refresh_token:
+                                                type: 'auth'
+                                                msg: 'Refresh token is invalid or expired'
+                                                path: 'refresh_token'
+                                                location: 'cookie'
+    /users/about-me:
+        get:
+            tags:
+                - Users
+            summary: Get current user profile
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: User profile retrieved
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UserProfile'
+                            examples:
+                                success:
+                                    summary: User profile data
+                                    value:
+                                        _id: '65d1f24ab7541c53cb452336'
+                                        name: 'John Doe'
+                                        email: 'john.doe@example.com'
+                                        date_of_birth: '1990-01-01T00:00:00.000Z'
+                                        created_at: '2023-02-18T09:30:21.245Z'
+                                        updated_at: '2023-02-18T09:30:21.245Z'
+                                        username: 'johndoe123'
+                                        bio: 'Web developer and coffee enthusiast'
+                                        location: 'New York, USA'
+                                        website: 'https://johndoe.example.com'
+                                        avatar: 'https://example.com/images/avatars/johndoe.jpg'
+                                        cover_photo: 'https://example.com/images/covers/johndoe-cover.jpg'
+                                        verified: false
+                '401':
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                            examples:
+                                unauthorized:
+                                    summary: Not authenticated
+                                    value:
+                                        message: 'Unauthorized'
+                                        errors:
+                                            token:
+                                                type: 'auth'
+                                                msg: 'You must be logged in to access your profile'
+                                                path: 'authorization'
+                                                location: 'header'
+        patch:
+            tags:
+                - Users
+            summary: Update user profile
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdateProfileRequest'
+            responses:
+                '200':
+                    description: Profile updated
+                '400':
+                    description: Validation error
+                '401':
+                    description: Unauthorized
+    /users/{username}:
+        get:
+            tags:
+                - Users
+            summary: Get user profile by username
+            parameters:
+                - name: username
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                '200':
+                    description: User profile retrieved
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UserProfile'
+                '404':
+                    description: User not found
+    /users/follow:
+        post:
+            tags:
+                - Users
+            summary: Follow a user
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                followed_user_id:
+                                    type: string
+                            required:
+                                - followed_user_id
+            responses:
+                '200':
+                    description: User followed successfully
+                '400':
+                    description: Already following or invalid user
+                '401':
+                    description: Unauthorized
+    /users/follow/{user_id}:
+        delete:
+            tags:
+                - Users
+            summary: Unfollow a user
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: user_id
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                '200':
+                    description: User unfollowed successfully
+                '400':
+                    description: Not following or invalid user
+                '401':
+                    description: Unauthorized
+    /users/change-password:
+        put:
+            tags:
+                - Users
+            summary: Change password
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                old_password:
+                                    type: string
+                                new_password:
+                                    type: string
+                                confirm_new_password:
+                                    type: string
+                            required:
+                                - old_password
+                                - new_password
+                                - confirm_new_password
+            responses:
+                '200':
+                    description: Password changed successfully
+                '400':
+                    description: Validation error
+                '401':
+                    description: Unauthorized
+    /tweets:
+        post:
+            tags:
+                - Tweets
+            summary: Create a new tweet
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateTweetRequest'
+            responses:
+                '200':
+                    description: Tweet created successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Tweet'
+                            examples:
+                                success:
+                                    summary: Tweet created successfully
+                                    value:
+                                        _id: '65d24f8cb7541c53cb452337'
+                                        user_id: '65d1f24ab7541c53cb452336'
+                                        content: 'Just posted my first tweet using the Twitter Clone API!'
+                                        hashtags: ['TwitterClone', 'API']
+                                        mentions: []
+                                        medias: []
+                                        audience: 0
+                                        parent_id: null
+                                        type: 0
+                                        created_at: '2023-02-18T14:45:32.245Z'
+                                        updated_at: '2023-02-18T14:45:32.245Z'
+                '400':
+                    description: Validation error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                            examples:
+                                empty_content:
+                                    summary: Empty tweet content
+                                    value:
+                                        message: 'Validation error'
+                                        errors:
+                                            content:
+                                                type: 'field'
+                                                value: ''
+                                                msg: 'Content cannot be empty'
+                                                path: 'content'
+                                                location: 'body'
+                '401':
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                            examples:
+                                unauthorized:
+                                    summary: Not authenticated
+                                    value:
+                                        message: 'Unauthorized'
+                                        errors:
+                                            token:
+                                                type: 'auth'
+                                                msg: 'You must be logged in to create a tweet'
+                                                path: 'authorization'
+                                                location: 'header'
+        get:
+            tags:
+                - Tweets
+            summary: Get news feed
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: page
+                  in: query
+                  schema:
+                      type: integer
+                      default: 1
+                - name: limit
+                  in: query
+                  schema:
+                      type: integer
+                      default: 10
+                - name: source
+                  in: query
+                  schema:
+                      type: string
+                      enum: [for-you, following]
+                      default: for-you
+            responses:
+                '200':
+                    description: News feed retrieved
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    tweets:
+                                        type: array
+                                        items:
+                                            $ref: '#/components/schemas/Tweet'
+                                    totalItems:
+                                        type: integer
+                '401':
+                    description: Unauthorized
+    /tweets/{tweet_id}:
+        get:
+            tags:
+                - Tweets
+            summary: Get tweet by ID
+            parameters:
+                - name: tweet_id
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+            security:
+                - BearerAuth: []
+                - {}
+            responses:
+                '200':
+                    description: Tweet retrieved
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Tweet'
+                '404':
+                    description: Tweet not found
+    /tweets/{tweet_id}/children:
+        get:
+            tags:
+                - Tweets
+            summary: Get tweet children (comments, retweets, etc)
+            parameters:
+                - name: tweet_id
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+                - name: tweet_type
+                  in: query
+                  required: true
+                  schema:
+                      type: integer
+                      enum: [0, 1, 2, 3]
+                      description: '0: Tweet, 1: Retweet, 2: Comment, 3: QuoteTweet'
+                - name: page
+                  in: query
+                  schema:
+                      type: integer
+                      default: 1
+                - name: limit
+                  in: query
+                  schema:
+                      type: integer
+                      default: 10
+            security:
+                - BearerAuth: []
+                - {}
+            responses:
+                '200':
+                    description: Tweet children retrieved
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    tweets:
+                                        type: array
+                                        items:
+                                            $ref: '#/components/schemas/Tweet'
+                                    totalItems:
+                                        type: integer
+                '404':
+                    description: Tweet not found
+    /likes:
+        post:
+            tags:
+                - Likes
+            summary: Like a tweet
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                tweet_id:
+                                    type: string
+                            required:
+                                - tweet_id
+            responses:
+                '200':
+                    description: Tweet liked successfully
+                '400':
+                    description: Already liked
+                '401':
+                    description: Unauthorized
+    /likes/tweets/{tweet_id}:
+        delete:
+            tags:
+                - Likes
+            summary: Unlike a tweet
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: tweet_id
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                '200':
+                    description: Tweet unliked successfully
+                '400':
+                    description: Not liked
+                '401':
+                    description: Unauthorized
+    /bookmarks:
+        post:
+            tags:
+                - Bookmarks
+            summary: Bookmark a tweet
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                tweet_id:
+                                    type: string
+                            required:
+                                - tweet_id
+            responses:
+                '200':
+                    description: Tweet bookmarked successfully
+                '400':
+                    description: Already bookmarked
+                '401':
+                    description: Unauthorized
+    /bookmarks/tweets/{tweet_id}:
+        delete:
+            tags:
+                - Bookmarks
+            summary: Remove bookmark
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: tweet_id
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                '200':
+                    description: Bookmark removed successfully
+                '400':
+                    description: Not bookmarked
+                '401':
+                    description: Unauthorized
+    /medias/upload-image:
+        post:
+            tags:
+                - Media
+            summary: Upload image
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    multipart/form-data:
+                        schema:
+                            type: object
+                            properties:
+                                image:
+                                    type: string
+                                    format: binary
+            responses:
+                '200':
+                    description: Image uploaded successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    url:
+                                        type: string
+                '401':
+                    description: Unauthorized
+    /medias/upload-video:
+        post:
+            tags:
+                - Media
+            summary: Upload video
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    multipart/form-data:
+                        schema:
+                            type: object
+                            properties:
+                                video:
+                                    type: string
+                                    format: binary
+            responses:
+                '200':
+                    description: Video uploaded successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    url:
+                                        type: string
+                '401':
+                    description: Unauthorized
+    /medias/upload-video-hls:
+        post:
+            tags:
+                - Media
+            summary: Upload video using HLS
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    multipart/form-data:
+                        schema:
+                            type: object
+                            properties:
+                                video:
+                                    type: string
+                                    format: binary
+            responses:
+                '200':
+                    description: Video uploaded successfully (HLS)
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    id:
+                                        type: string
+                                    url:
+                                        type: string
+                '401':
+                    description: Unauthorized
+    /medias/video-status/{id}:
+        get:
+            tags:
+                - Media
+            summary: Get video encoding status
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                '200':
+                    description: Video status retrieved
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: integer
+                                        enum: [0, 1, 2, 3]
+                                        description: '0: Pending, 1: Processing, 2: Completed, 3: Failed'
+                '401':
+                    description: Unauthorized
+components:
+    schemas:
+        RegisterRequest:
+            type: object
+            properties:
+                name:
+                    type: string
+                    example: storius
+                email:
+                    type: string
+                    format: email
+                    example: storius@example.com
+                password:
+                    type: string
+                    format: password
+                    example: Hehe123#
+                confirm_password:
+                    type: string
+                    format: password
+                    example: Hehe123#
+                date_of_birth:
+                    type: string
+                    format: date-time
+                    example: 2024-03-10T08:26:33.781Z
+            required:
+                - name
+                - email
+                - password
+                - confirm_password
+                - date_of_birth
+        UpdateProfileRequest:
+            type: object
+            properties:
+                name:
+                    type: string
+                date_of_birth:
+                    type: string
+                    format: date-time
+                bio:
+                    type: string
+                location:
+                    type: string
+                website:
+                    type: string
+                username:
+                    type: string
+                avatar:
+                    type: string
+                cover_photo:
+                    type: string
+        UserProfile:
+            type: object
+            properties:
+                _id:
+                    type: string
+                name:
+                    type: string
+                email:
+                    type: string
+                date_of_birth:
+                    type: string
+                    format: date-time
+                created_at:
+                    type: string
+                    format: date-time
+                updated_at:
+                    type: string
+                    format: date-time
+                verify:
+                    type: integer
+                    enum: [0, 1, 2, 3]
+                    description: '0: Unverified, 1: Verified, 2: Banned, 3: Private'
+                bio:
+                    type: string
+                location:
+                    type: string
+                website:
+                    type: string
+                username:
+                    type: string
+                avatar:
+                    type: string
+                cover_photo:
+                    type: string
+                deleted:
+                    type: boolean
+        CreateTweetRequest:
+            type: object
+            properties:
+                type:
+                    type: integer
+                    enum: [0, 1, 2, 3]
+                    description: '0: Tweet, 1: Retweet, 2: Comment, 3: QuoteTweet'
+                audience:
+                    type: integer
+                    enum: [0, 1]
+                    description: '0: Everyone, 1: TwitterCircle'
+                content:
+                    type: string
+                parent_id:
+                    type: string
+                    nullable: true
+                hashtags:
+                    type: array
+                    items:
+                        type: string
+                mentions:
+                    type: array
+                    items:
+                        type: string
+                medias:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Media'
+            required:
+                - type
+                - audience
+                - content
+                - hashtags
+                - mentions
+                - medias
+        Tweet:
+            type: object
+            properties:
+                _id:
+                    type: string
+                user_id:
+                    type: string
+                type:
+                    type: integer
+                    enum: [0, 1, 2, 3]
+                    description: '0: Tweet, 1: Retweet, 2: Comment, 3: QuoteTweet'
+                audience:
+                    type: integer
+                    enum: [0, 1]
+                    description: '0: Everyone, 1: TwitterCircle'
+                content:
+                    type: string
+                parent_id:
+                    type: string
+                    nullable: true
+                hashtags:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            _id:
+                                type: string
+                            name:
+                                type: string
+                mentions:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            _id:
+                                type: string
+                            name:
+                                type: string
+                medias:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Media'
+                guest_views:
+                    type: integer
+                user_views:
+                    type: integer
+                created_at:
+                    type: string
+                    format: date-time
+                updated_at:
+                    type: string
+                    format: date-time
+                deleted:
+                    type: boolean
+                user:
+                    type: object
+                    properties:
+                        _id:
+                            type: string
+                        name:
+                            type: string
+                        username:
+                            type: string
+                        avatar:
+                            type: string
+                        verify:
+                            type: integer
+                bookmarks:
+                    type: integer
+                likes:
+                    type: integer
+                bookmarked:
+                    type: boolean
+                liked:
+                    type: boolean
+                retweet_count:
+                    type: integer
+                comment_count:
+                    type: integer
+                quote_count:
+                    type: integer
+        Media:
+            type: object
+            properties:
+                type:
+                    type: integer
+                    enum: [0, 1, 2]
+                    description: '0: Image, 1: Video, 2: HLS'
+                url:
+                    type: string
+        ErrorResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+                errors:
+                    type: object
+                    additionalProperties:
+                        type: object
+                        properties:
+                            type:
+                                type: string
+                            value:
+                                type: string
+                            msg:
+                                type: string
+                            path:
+                                type: string
+                            location:
+                                type: string
+    securitySchemes:
+        BearerAuth:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+        CookieAuth:
+            type: apiKey
+            in: cookie
+            name: refresh_token

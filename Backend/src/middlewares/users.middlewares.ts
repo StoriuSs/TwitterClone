@@ -104,7 +104,7 @@ export const registerValidator = validate(
                 options: async (value) => {
                     const userExists = await usersService.emailExists(value)
                     if (userExists) {
-                        throw new ErrorsWithStatus(userMessages.emailAlreadyExists, httpStatus.UNPROCESSABLE_ENTITY)
+                        throw new Error(userMessages.emailAlreadyExists)
                     }
                     return true
                 }
@@ -136,12 +136,12 @@ export const loginValidator = validate(
                     })
                     // If user is not found, throw an error
                     if (user === null) {
-                        throw new ErrorsWithStatus(userMessages.userNotFound, httpStatus.UNPROCESSABLE_ENTITY)
+                        throw new Error(userMessages.userNotFound)
                     }
                     // If password does not match, throw an error
                     const isMatch = await comparePasswords(req.body.password, user.password)
                     if (isMatch === false) {
-                        throw new ErrorsWithStatus(userMessages.passwordIncorrect, httpStatus.UNPROCESSABLE_ENTITY)
+                        throw new Error(userMessages.passwordIncorrect)
                     }
                     // If user is valid, attach user to request object
                     req.user = user
@@ -240,7 +240,7 @@ export const emailVerifyTokenValidator = validate(
                         throw new ErrorsWithStatus(userMessages.emailVerifyTokenInvalid, httpStatus.UNAUTHORIZED)
                     }
                     if (user.verify === UserVerifyStatus.Verified) {
-                        throw new ErrorsWithStatus(userMessages.emailAlreadyVerified, httpStatus.UNPROCESSABLE_ENTITY)
+                        throw new Error(userMessages.emailAlreadyVerified)
                     }
                     req.user = user
                     return true
@@ -266,7 +266,7 @@ export const forgotPasswordValidator = validate(
                 options: async (value, { req }) => {
                     const user = await databaseService.users.findOne({ email: value })
                     if (!user) {
-                        throw new ErrorsWithStatus(userMessages.userNotFound, httpStatus.UNPROCESSABLE_ENTITY)
+                        throw new Error(userMessages.userNotFound)
                     }
                     req.user = user
                     return true
@@ -493,7 +493,7 @@ export const changePasswordValidator = validate(
                     }
                     const isMatch = await comparePasswords(value, user.password)
                     if (!isMatch) {
-                        throw new ErrorsWithStatus(userMessages.oldPasswordIncorrect, httpStatus.UNPROCESSABLE_ENTITY)
+                        throw new Error(userMessages.oldPasswordIncorrect)
                     }
                     return true
                 }
@@ -504,10 +504,7 @@ export const changePasswordValidator = validate(
             custom: {
                 options: async (value, { req }) => {
                     if (value === req.body.old_password) {
-                        throw new ErrorsWithStatus(
-                            userMessages.newPasswordMustBeDifferent,
-                            httpStatus.UNPROCESSABLE_ENTITY
-                        )
+                        throw new Error(userMessages.newPasswordMustBeDifferent)
                     }
                     return true
                 }
@@ -519,7 +516,7 @@ export const changePasswordValidator = validate(
                 options: async (value, { req }) => {
                     const { new_password } = req.body
                     if (value !== new_password) {
-                        throw new ErrorsWithStatus(userMessages.passwordsMustMatch, httpStatus.UNPROCESSABLE_ENTITY)
+                        throw new Error(userMessages.passwordsMustMatch)
                     }
                     return true
                 }

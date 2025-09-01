@@ -11,6 +11,9 @@ import cors from 'cors'
 import tweetsRouter from './routes/tweets.routes'
 import bookmarksRouter from './routes/bookmarks.routes'
 import likesRouter from './routes/likes.routes'
+import swaggerUi from 'swagger-ui-express'
+import YAML from 'yaml'
+import fs from 'fs'
 
 const app = express()
 // CORS
@@ -48,6 +51,12 @@ app.use('/api/likes', likesRouter)
 
 // Error handling middleware
 app.use(errorHandler)
+
+// Swagger documentation
+const file = fs.readFileSync('./twitter-swagger.yaml', 'utf8')
+const swaggerDocument = YAML.parse(file)
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
