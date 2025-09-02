@@ -14,6 +14,7 @@ import likesRouter from './routes/likes.routes'
 import swaggerUi from 'swagger-ui-express'
 import YAML from 'yaml'
 import fs from 'fs'
+import searchRouter from './routes/search.routes'
 
 const app = express()
 // CORS
@@ -36,6 +37,7 @@ databaseService.connect().then(() => {
     databaseService.indexLikes()
     databaseService.indexBookmarks()
     databaseService.indexHashtags()
+    databaseService.indexTweets()
 })
 
 // Initialize upload folder
@@ -48,6 +50,7 @@ app.use('/static', staticRouter)
 app.use('/api/tweets', tweetsRouter)
 app.use('/api/bookmarks', bookmarksRouter)
 app.use('/api/likes', likesRouter)
+app.use('/api/search', searchRouter)
 
 // Error handling middleware
 app.use(errorHandler)

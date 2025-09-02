@@ -18,7 +18,7 @@ class DatabaseService {
         this.client = new MongoClient(uri, {
             serverApi: {
                 version: ServerApiVersion.v1,
-                strict: true,
+                strict: false, // Changed to false to allow text indexes
                 deprecationErrors: true
             }
         })
@@ -82,6 +82,30 @@ class DatabaseService {
         const alreadyExists = await this.hashtags.indexExists('name_1')
         if (alreadyExists) return
         this.hashtags.createIndex({ name: 1 }, { unique: true })
+    }
+
+    async indexTweets() {
+        // Check if indexes already exist
+        const existingIndexes = await this.tweets.indexExists([
+            'content_text',
+            'parent_id_1',
+            'user_id_1',
+            'deleted_1',
+            'type_1',
+            'created_at_-1',
+            'parent_id_1_type_1_deleted_1',
+            'user_id_1_type_1_deleted_1'
+        ])
+        if (existingIndexes) return
+
+        await this.tweets.createIndex({ content: 'text' })
+        await this.tweets.createIndex({ parent_id: 1 })
+        await this.tweets.createIndex({ user_id: 1 })
+        await this.tweets.createIndex({ deleted: 1 })
+        await this.tweets.createIndex({ type: 1 })
+        await this.tweets.createIndex({ created_at: -1 })
+        await this.tweets.createIndex({ parent_id: 1, type: 1, deleted: 1 })
+        await this.tweets.createIndex({ user_id: 1, type: 1, deleted: 1 })
     }
 
     get users(): Collection<User> {

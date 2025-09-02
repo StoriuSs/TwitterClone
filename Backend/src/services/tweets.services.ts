@@ -149,20 +149,14 @@ class TweetsService {
                 },
                 {
                     $addFields: {
-                        bookmarks: {
-                            $size: '$bookmarks'
-                        },
-                        likes: {
-                            $size: '$likes'
-                        },
+                        bookmarks: { $size: '$bookmarks' },
+                        likes: { $size: '$likes' },
                         retweet_count: {
                             $size: {
                                 $filter: {
                                     input: '$tweet_children',
                                     as: 'item',
-                                    cond: {
-                                        $eq: ['$$item.type', TweetType.Retweet]
-                                    }
+                                    cond: { $eq: ['$$item.type', TweetType.Retweet] }
                                 }
                             }
                         },
@@ -171,9 +165,7 @@ class TweetsService {
                                 $filter: {
                                     input: '$tweet_children',
                                     as: 'item',
-                                    cond: {
-                                        $eq: ['$$item.type', TweetType.Comment]
-                                    }
+                                    cond: { $eq: ['$$item.type', TweetType.Comment] }
                                 }
                             }
                         },
@@ -182,10 +174,44 @@ class TweetsService {
                                 $filter: {
                                     input: '$tweet_children',
                                     as: 'item',
-                                    cond: {
-                                        $eq: ['$$item.type', TweetType.QuoteTweet]
-                                    }
+                                    cond: { $eq: ['$$item.type', TweetType.QuoteTweet] }
                                 }
+                            }
+                        },
+                        liked: {
+                            $in: [new ObjectId(user_id), '$likes.user_id']
+                        },
+                        bookmarked: {
+                            $in: [new ObjectId(user_id), '$bookmarks.user_id']
+                        },
+                        reposted: {
+                            $cond: {
+                                if: {
+                                    $gt: [
+                                        {
+                                            $size: {
+                                                $filter: {
+                                                    input: '$tweet_children',
+                                                    as: 'child',
+                                                    cond: {
+                                                        $and: [
+                                                            { $eq: ['$$child.user_id', new ObjectId(user_id)] },
+                                                            {
+                                                                $in: [
+                                                                    '$$child.type',
+                                                                    [TweetType.Retweet, TweetType.QuoteTweet]
+                                                                ]
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        0
+                                    ]
+                                },
+                                then: true,
+                                else: false
                             }
                         }
                     }
@@ -231,7 +257,7 @@ class TweetsService {
         }
     }
 
-    async getNewsFeedAdvanced({
+    async getNewsFeed({
         user_id,
         page,
         limit,
@@ -242,7 +268,6 @@ class TweetsService {
         limit: number
         source: NewsFeedType
     }) {
-        console.log(source)
         const user_id_obj = new ObjectId(user_id)
 
         // Base aggregation pipeline
@@ -390,10 +415,16 @@ class TweetsService {
         // Step 4: Sort by recency (most recent first)
         pipeline.push({ $sort: { created_at: -1 } })
 
-        // Step 5: Pagination
+        // Step 5: Count total items before proceeding with pagination
+        pipeline.push({ $count: 'totalItems' })
+        const totalItemsResult = await databaseService.tweets.aggregate(pipeline).toArray()
+        const totalItems = totalItemsResult.length > 0 ? totalItemsResult[0].totalItems : 0
+        pipeline.pop()
+
+        // Step 6: Pagination
         pipeline.push({ $skip: (page - 1) * limit }, { $limit: limit })
 
-        // Step 6: Enrich with related data
+        // Step 7: Enrich with related data
         pipeline.push(
             // Hashtags
             {
@@ -445,6 +476,15 @@ class TweetsService {
                     as: 'likes'
                 }
             },
+            // Children tweets (for counts)
+            {
+                $lookup: {
+                    from: 'tweets',
+                    localField: '_id',
+                    foreignField: 'parent_id',
+                    as: 'tweet_children'
+                }
+            },
             // Has user bookmarked/liked
             {
                 $addFields: {
@@ -453,16 +493,37 @@ class TweetsService {
                     },
                     liked: {
                         $in: [user_id_obj, '$likes.user_id']
+                    },
+                    reposted: {
+                        $cond: {
+                            if: {
+                                $gt: [
+                                    {
+                                        $size: {
+                                            $filter: {
+                                                input: '$tweet_children',
+                                                as: 'child',
+                                                cond: {
+                                                    $and: [
+                                                        { $eq: ['$$child.user_id', user_id_obj] },
+                                                        {
+                                                            $in: [
+                                                                '$$child.type',
+                                                                [TweetType.Retweet, TweetType.QuoteTweet]
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        }
+                                    },
+                                    0
+                                ]
+                            },
+                            then: true,
+                            else: false
+                        }
                     }
-                }
-            },
-            // Children tweets (for counts)
-            {
-                $lookup: {
-                    from: 'tweets',
-                    localField: '_id',
-                    foreignField: 'parent_id',
-                    as: 'tweet_children'
                 }
             },
             // Add counts
@@ -502,16 +563,20 @@ class TweetsService {
             // Project final shape
             {
                 $project: {
-                    bookmarks: 1,
-                    likes: 1,
-                    bookmarked: 1,
-                    liked: 1,
+                    tweet_children: 0,
+                    user_id: 0,
                     user: {
-                        _id: 1,
-                        name: 1,
-                        username: 1,
-                        avatar: 1,
-                        verify: 1
+                        email: 0,
+                        password: 0,
+                        email_verify_token: 0,
+                        forgot_password_token: 0,
+                        twitter_circle: 0,
+                        date_of_birth: 0,
+                        location: 0,
+                        website: 0,
+                        created_at: 0,
+                        updated_at: 0,
+                        cover_photo: 0
                     }
                 }
             }
@@ -519,10 +584,8 @@ class TweetsService {
 
         // Execute aggregation pipeline
         const tweets = await databaseService.tweets.aggregate(pipeline).toArray()
-
         // Don't handle increasing views here, let client do that
-        console.log(tweets.length)
-        return tweets
+        return { tweets, totalItems }
     }
 }
 

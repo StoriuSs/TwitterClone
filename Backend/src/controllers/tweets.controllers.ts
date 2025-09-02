@@ -64,7 +64,7 @@ export const getNewsFeedController = async (req: Request<ParamsDictionary, any, 
     const limit = Number(req.query.limit)
     const source = req.query.source
 
-    const result = await tweetsService.getNewsFeedAdvanced({
+    const { tweets, totalItems } = await tweetsService.getNewsFeed({
         user_id: user.user_id,
         page,
         limit,
@@ -74,8 +74,9 @@ export const getNewsFeedController = async (req: Request<ParamsDictionary, any, 
         message: tweetMessages.newsFeedRetrieved,
         result: {
             page,
+            total_pages: Math.ceil(totalItems / limit),
             limit,
-            result
+            tweets
         }
     })
 }

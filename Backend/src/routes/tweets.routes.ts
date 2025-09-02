@@ -27,9 +27,9 @@ tweetsRouter.post(
 
 tweetsRouter.get(
     '/:tweet_id',
-    getTweetByIdValidator,
     isUserLoggedInValidator(accessTokenValidator),
     isUserLoggedInValidator(verifiedUserValidator),
+    getTweetByIdValidator,
     audienceValidator,
     wrapRequestHandler(getTweetByIdController)
 )

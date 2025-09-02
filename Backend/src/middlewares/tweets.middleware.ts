@@ -264,6 +264,52 @@ export const getTweetByIdValidator = validate(
                                                 }
                                             }
                                         }
+                                    },
+                                    liked: {
+                                        $in: [new ObjectId(req.decoded_authorization?.user_id), '$likes.user_id']
+                                    },
+                                    bookmarked: {
+                                        $in: [new ObjectId(req.decoded_authorization?.user_id), '$bookmarks.user_id']
+                                    },
+                                    reposted: {
+                                        $cond: {
+                                            if: {
+                                                $gt: [
+                                                    {
+                                                        $size: {
+                                                            $filter: {
+                                                                input: '$tweet_children',
+                                                                as: 'child',
+                                                                cond: {
+                                                                    $and: [
+                                                                        {
+                                                                            $eq: [
+                                                                                '$$child.user_id',
+                                                                                new ObjectId(
+                                                                                    req.decoded_authorization?.user_id
+                                                                                )
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            $in: [
+                                                                                '$$child.type',
+                                                                                [
+                                                                                    TweetType.Retweet,
+                                                                                    TweetType.QuoteTweet
+                                                                                ]
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    0
+                                                ]
+                                            },
+                                            then: true,
+                                            else: false
+                                        }
                                     }
                                 }
                             },
@@ -278,6 +324,7 @@ export const getTweetByIdValidator = validate(
                         throw new Error(tweetMessages.tweetNotFound)
                     }
                     ;(req as Request).tweet = tweet
+                    console.log(req.decoded_authorization)
                     return true
                 }
             }
