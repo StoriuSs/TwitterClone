@@ -772,18 +772,98 @@ paths:
                       default: for-you
             responses:
                 '200':
-                    description: News feed retrieved
+                    description: News feed retrieved successfully
                     content:
                         application/json:
                             schema:
                                 type: object
                                 properties:
-                                    tweets:
-                                        type: array
-                                        items:
-                                            $ref: '#/components/schemas/Tweet'
-                                    totalItems:
-                                        type: integer
+                                    message:
+                                        type: string
+                                        example: 'News feed retrieved successfully'
+                                    result:
+                                        type: object
+                                        properties:
+                                            page:
+                                                type: integer
+                                                example: 2
+                                            total_pages:
+                                                type: integer
+                                                example: 21
+                                            limit:
+                                                type: integer
+                                                example: 10
+                                            tweets:
+                                                type: array
+                                                items:
+                                                    type: object
+                                                    properties:
+                                                        _id:
+                                                            type: string
+                                                            example: '68b698d31eab7a5b3d50f57d'
+                                                        type:
+                                                            type: integer
+                                                            example: 3
+                                                        audience:
+                                                            type: integer
+                                                            example: 0
+                                                        content:
+                                                            type: string
+                                                            example: 'QUOTEEEE'
+                                                        parent_id:
+                                                            type: string
+                                                            example: '68b4666febff7a0e05215d00'
+                                                        hashtags:
+                                                            type: array
+                                                            items:
+                                                                type: string
+                                                        mentions:
+                                                            type: array
+                                                            items:
+                                                                type: string
+                                                        medias:
+                                                            type: array
+                                                            items:
+                                                                type: string
+                                                        guest_views:
+                                                            type: integer
+                                                            example: 0
+                                                        user_views:
+                                                            type: integer
+                                                            example: 0
+                                                        created_at:
+                                                            type: string
+                                                            example: '2025-09-02T07:12:19.836Z'
+                                                        updated_at:
+                                                            type: string
+                                                            example: '2025-09-02T07:12:19.836Z'
+                                                        deleted:
+                                                            type: boolean
+                                                            example: false
+                                                        bookmarks:
+                                                            type: integer
+                                                            example: 0
+                                                        likes:
+                                                            type: integer
+                                                            example: 0
+                                                        bookmarked:
+                                                            type: boolean
+                                                            example: false
+                                                        liked:
+                                                            type: boolean
+                                                            example: false
+                                                        reposted:
+                                                            type: boolean
+                                                            example: false
+                                                        retweet_count:
+                                                            type: integer
+                                                            example: 0
+                                                        comment_count:
+                                                            type: integer
+                                                            example: 0
+                                                        quote_count:
+                                                            type: integer
+                                                            example: 0
                 '401':
                     description: Unauthorized
     /tweets/{tweet_id}:
@@ -842,18 +922,104 @@ paths:
                 - {}
             responses:
                 '200':
-                    description: Tweet children retrieved
+                    description: Tweet children retrieved successfully
                     content:
                         application/json:
                             schema:
                                 type: object
                                 properties:
-                                    tweets:
-                                        type: array
-                                        items:
-                                            $ref: '#/components/schemas/Tweet'
-                                    totalItems:
-                                        type: integer
+                                    message:
+                                        type: string
+                                        example: 'Tweet children retrieved successfully'
+                                    result:
+                                        type: object
+                                        properties:
+                                            tweet_type:
+                                                type: integer
+                                                example: 1
+                                            totalPages:
+                                                type: integer
+                                                example: 1
+                                            page:
+                                                type: integer
+                                                example: 1
+                                            limit:
+                                                type: integer
+                                                example: 5
+                                            tweets:
+                                                type: array
+                                                items:
+                                                    type: object
+                                                    properties:
+                                                        id:
+                                                            type: string
+                                                            example: '68b691608095e6936c95dd6'
+                                                        user_id:
+                                                            type: string
+                                                            example: '68b3e5b0728ed4325944162a'
+                                                        type:
+                                                            type: integer
+                                                            example: 1
+                                                        audience:
+                                                            type: integer
+                                                            example: 0
+                                                        content:
+                                                            type: string
+                                                            example: ''
+                                                        parent_id:
+                                                            type: string
+                                                            example: '68b4666febff7a0e05215d00'
+                                                        hashtags:
+                                                            type: array
+                                                            items:
+                                                                type: string
+                                                        mentions:
+                                                            type: array
+                                                            items:
+                                                                type: string
+                                                        medias:
+                                                            type: array
+                                                            items:
+                                                                type: string
+                                                        guest_views:
+                                                            type: integer
+                                                            example: 2
+                                                        user_views:
+                                                            type: integer
+                                                            example: 2
+                                                        created_at:
+                                                            type: string
+                                                            example: '2025-09-02T06:40:32.856Z'
+                                                        updated_at:
+                                                            type: string
+                                                            example: '2025-09-02T14:13:07.852Z'
+                                                        deleted:
+                                                            type: boolean
+                                                            example: false
+                                                        bookmarks:
+                                                            type: integer
+                                                            example: 0
+                                                        likes:
+                                                            type: integer
+                                                            example: 1
+                                                        retweet_count:
+                                                            type: integer
+                                                            example: 0
+                                                        comment_count:
+                                                            type: integer
+                                                            example: 0
+                                                        quote_count:
+                                                            type: integer
+                                                            example: 0
+                                                        liked:
+                                                            type: boolean
+                                                            example: false
+                                                        bookmarked:
+                                                            type: boolean
+                                                            example: false
+                                                        reposted:
+                                                            type: boolean
+                                                            example: false
                 '404':
                     description: Tweet not found
     /likes:
@@ -899,6 +1065,232 @@ paths:
                     description: Tweet unliked successfully
                 '400':
                     description: Not liked
+                '401':
+                    description: Unauthorized
+    /search:
+        get:
+            tags:
+                - Search
+            summary: Search for tweets or users
+            security:
+                - BearerAuth: []
+            parameters:
+                - name: content
+                  in: query
+                  required: true
+                  schema:
+                      type: string
+                  description: The search query
+                - name: type
+                  in: query
+                  schema:
+                      type: integer
+                      enum: [0, 1, 2, 3]
+                      description: '0: Top, 1: Latest, 2: People, 3: Media'
+                      default: 0
+                - name: source
+                  in: query
+                  schema:
+                      type: integer
+                      enum: [0, 1]
+                      description: '0: Anyone, 1: Following'
+                      default: 0
+                - name: page
+                  in: query
+                  schema:
+                      type: integer
+                      default: 1
+                - name: limit
+                  in: query
+                  schema:
+                      type: integer
+                      default: 10
+            responses:
+                '200':
+                    description: Search results
+                    content:
+                        application/json:
+                            schema:
+                                oneOf:
+                                    - type: object
+                                      properties:
+                                          message:
+                                              type: string
+                                              example: 'Search results'
+                                          page:
+                                              type: integer
+                                              example: 1
+                                          total_pages:
+                                              type: integer
+                                              example: 27
+                                          limit:
+                                              type: integer
+                                              example: 3
+                                          tweets:
+                                              type: array
+                                              items:
+                                                  type: object
+                                                  properties:
+                                                      _id:
+                                                          type: string
+                                                          example: '68b4003db0bee6b3c2048f6a'
+                                                      type:
+                                                          type: integer
+                                                          example: 0
+                                                      audience:
+                                                          type: integer
+                                                          example: 0
+                                                      content:
+                                                          type: string
+                                                          example: 'Appello desidero tamdiu depulso tibi dignissimos bellum cinis'
+                                                      parent_id:
+                                                          type: string
+                                                          nullable: true
+                                                          example: null
+                                                      hashtags:
+                                                          type: array
+                                                          items:
+                                                              type: string
+                                                      mentions:
+                                                          type: array
+                                                          items:
+                                                              type: string
+                                                      medias:
+                                                          type: array
+                                                          items:
+                                                              type: string
+                                                      guest_views:
+                                                          type: integer
+                                                          example: 0
+                                                      user_views:
+                                                          type: integer
+                                                          example: 0
+                                                      created_at:
+                                                          type: string
+                                                          example: '2025-08-31T07:56:45.861Z'
+                                                      updated_at:
+                                                          type: string
+                                                          example: '2025-08-31T07:56:45.861Z'
+                                                      deleted:
+                                                          type: boolean
+                                                          example: false
+                                                      user:
+                                                          type: object
+                                                          properties:
+                                                              _id:
+                                                                  type: string
+                                                                  example: '68b40035b0bee6b3c2048cb0'
+                                                              name:
+                                                                  type: string
+                                                                  example: 'Brad45'
+                                                              verify:
+                                                                  type: integer
+                                                                  example: 1
+                                                              bio:
+                                                                  type: string
+                                                                  example: ''
+                                                              username:
+                                                                  type: string
+                                                                  example: 'user68b40035b0bee6b3c2048cb0'
+                                                              avatar:
+                                                                  type: string
+                                                                  example: ''
+                                                              deleted:
+                                                                  type: boolean
+                                                                  example: false
+                                                      bookmarks:
+                                                          type: integer
+                                                          example: 0
+                                                      likes:
+                                                          type: integer
+                                                          example: 0
+                                                      retweet_count:
+                                                          type: integer
+                                                          example: 0
+                                                      comment_count:
+                                                          type: integer
+                                                          example: 0
+                                                      quote_count:
+                                                          type: integer
+                                                          example: 0
+                                                      liked:
+                                                          type: boolean
+                                                          example: false
+                                                      bookmarked:
+                                                          type: boolean
+                                                          example: false
+                                                      reposted:
+                                                          type: boolean
+                                                          example: false
+                                    - type: object
+                                      properties:
+                                          message:
+                                              type: string
+                                              example: 'Search results'
+                                          page:
+                                              type: integer
+                                              example: 1
+                                          total_pages:
+                                              type: integer
+                                              example: 2
+                                          limit:
+                                              type: integer
+                                              example: 3
+                                          users:
+                                              type: array
+                                              items:
+                                                  type: object
+                                                  properties:
+                                                      _id:
+                                                          type: string
+                                                          example: '68b184ff15fb4d4ca0eb021a'
+                                                      name:
+                                                          type: string
+                                                          example: 'storius'
+                                                      email:
+                                                          type: string
+                                                          example: 'storiustest1@gmail.com'
+                                                      date_of_birth:
+                                                          type: string
+                                                          format: date-time
+                                                          example: '2024-03-10T08:26:33.781Z'
+                                                      created_at:
+                                                          type: string
+                                                          format: date-time
+                                                          example: '2025-08-29T10:46:23.094Z'
+                                                      updated_at:
+                                                          type: string
+                                                          format: date-time
+                                                          example: '2025-08-29T13:37:39.605Z'
+                                                      verify:
+                                                          type: integer
+                                                          example: 1
+                                                      twitter_circle:
+                                                          type: array
+                                                          items:
+                                                              type: string
+                                                          example: ['68b1bcb3379e0be925a1664f']
+                                                      bio:
+                                                          type: string
+                                                          example: ''
+                                                      location:
+                                                          type: string
+                                                          example: ''
+                                                      website:
+                                                          type: string
+                                                          example: ''
+                                                      username:
+                                                          type: string
+                                                          example: 'userf5d61f2c02468020'
+                                                      avatar:
+                                                          type: string
+                                                          example: ''
+                                                      cover_photo:
+                                                          type: string
+                                                          example: ''
+                                                      deleted:
+                                                          type: boolean
+                                                          example: false
                 '401':
                     description: Unauthorized
     /bookmarks:
