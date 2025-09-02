@@ -270,322 +270,564 @@ class TweetsService {
     }) {
         const user_id_obj = new ObjectId(user_id)
 
-        // Base aggregation pipeline
-        const pipeline: any[] = []
-
-        // Step 1: Determine which tweets to include based on source
         if (source === NewsFeedType.Following) {
-            // Get followed user IDs
+            // Only followed users (including self)
             const followed_user_ids = await databaseService.followers
                 .find({ user_id: user_id_obj }, { projection: { followed_user_id: 1 } })
                 .toArray()
             const ids = followed_user_ids.map((item) => item.followed_user_id)
-            ids.push(user_id_obj) // include self id
+            ids.push(user_id_obj)
 
-            pipeline.push({
-                $match: {
-                    user_id: { $in: ids },
-                    type: { $in: [TweetType.Tweet, TweetType.QuoteTweet, TweetType.Retweet] },
-                    deleted: false
+            // Build pipeline for followed users
+            const pipeline: any[] = [
+                {
+                    $match: {
+                        user_id: { $in: ids },
+                        type: { $in: [TweetType.Tweet, TweetType.QuoteTweet, TweetType.Retweet] },
+                        deleted: false
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'users',
+                        let: { userId: '$user_id' },
+                        pipeline: [
+                            {
+                                $match: {
+                                    $expr: { $eq: ['$_id', '$$userId'] },
+                                    deleted: false
+                                }
+                            }
+                        ],
+                        as: 'user'
+                    }
+                },
+                { $unwind: { path: '$user' } },
+                {
+                    $match: {
+                        $or: [
+                            { audience: 0 },
+                            {
+                                $and: [{ audience: 1 }, { 'user.twitter_circle': { $in: [user_id_obj] } }]
+                            }
+                        ]
+                    }
+                },
+                { $sort: { created_at: -1 } }
+            ]
+
+            const totalItemsResult = await databaseService.tweets
+                .aggregate([...pipeline, { $count: 'totalItems' }])
+                .toArray()
+            const totalItems = totalItemsResult.length > 0 ? totalItemsResult[0].totalItems : 0
+
+            // Pagination
+            pipeline.push({ $skip: (page - 1) * limit }, { $limit: limit })
+
+            // Enrich with related data
+            pipeline.push(
+                {
+                    $lookup: {
+                        from: 'hashtags',
+                        localField: 'hashtags',
+                        foreignField: '_id',
+                        as: 'hashtags'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'mentions',
+                        foreignField: '_id',
+                        as: 'mentions'
+                    }
+                },
+                {
+                    $addFields: {
+                        mentions: {
+                            $map: {
+                                input: '$mentions',
+                                as: 'mention',
+                                in: {
+                                    _id: '$$mention._id',
+                                    name: '$$mention.name'
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'bookmarks',
+                        localField: '_id',
+                        foreignField: 'tweet_id',
+                        as: 'bookmarks'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'likes',
+                        localField: '_id',
+                        foreignField: 'tweet_id',
+                        as: 'likes'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'tweets',
+                        localField: '_id',
+                        foreignField: 'parent_id',
+                        as: 'tweet_children'
+                    }
+                },
+                {
+                    $addFields: {
+                        bookmarked: {
+                            $in: [user_id_obj, '$bookmarks.user_id']
+                        },
+                        liked: {
+                            $in: [user_id_obj, '$likes.user_id']
+                        },
+                        reposted: {
+                            $cond: {
+                                if: {
+                                    $gt: [
+                                        {
+                                            $size: {
+                                                $filter: {
+                                                    input: '$tweet_children',
+                                                    as: 'child',
+                                                    cond: {
+                                                        $and: [
+                                                            { $eq: ['$$child.user_id', user_id_obj] },
+                                                            {
+                                                                $in: [
+                                                                    '$$child.type',
+                                                                    [TweetType.Retweet, TweetType.QuoteTweet]
+                                                                ]
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        0
+                                    ]
+                                },
+                                then: true,
+                                else: false
+                            }
+                        }
+                    }
+                },
+                {
+                    $addFields: {
+                        bookmarks: { $size: '$bookmarks' },
+                        likes: { $size: '$likes' },
+                        retweet_count: {
+                            $size: {
+                                $filter: {
+                                    input: '$tweet_children',
+                                    as: 'item',
+                                    cond: { $eq: ['$$item.type', TweetType.Retweet] }
+                                }
+                            }
+                        },
+                        comment_count: {
+                            $size: {
+                                $filter: {
+                                    input: '$tweet_children',
+                                    as: 'item',
+                                    cond: { $eq: ['$$item.type', TweetType.Comment] }
+                                }
+                            }
+                        },
+                        quote_count: {
+                            $size: {
+                                $filter: {
+                                    input: '$tweet_children',
+                                    as: 'item',
+                                    cond: { $eq: ['$$item.type', TweetType.QuoteTweet] }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    $project: {
+                        tweet_children: 0,
+                        user_id: 0,
+                        user: {
+                            email: 0,
+                            password: 0,
+                            email_verify_token: 0,
+                            forgot_password_token: 0,
+                            twitter_circle: 0,
+                            date_of_birth: 0,
+                            location: 0,
+                            website: 0,
+                            created_at: 0,
+                            updated_at: 0,
+                            cover_photo: 0
+                        }
+                    }
                 }
-            })
+            )
+
+            const tweets = await databaseService.tweets.aggregate(pipeline).toArray()
+            return { tweets, totalItems }
         } else {
-            // "For You" algorithm - includes followed users' tweets + some popular tweets
-            // Get followed user IDs
+            // For-You: prioritized fill
             const followed_user_ids = await databaseService.followers
                 .find({ user_id: user_id_obj }, { projection: { followed_user_id: 1 } })
                 .toArray()
             const followed_ids = followed_user_ids.map((item) => item.followed_user_id)
-            followed_ids.push(user_id_obj) // include self id
+            followed_ids.push(user_id_obj)
 
-            // Use $facet to combine two different tweet sources
-            pipeline.push(
+            // Get all followed users' tweets (recent first)
+            const followedPipeline: any[] = [
                 {
-                    $facet: {
-                        followedTweets: [
+                    $match: {
+                        user_id: { $in: followed_ids },
+                        type: { $in: [TweetType.Tweet, TweetType.QuoteTweet, TweetType.Retweet] },
+                        deleted: false
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'users',
+                        let: { userId: '$user_id' },
+                        pipeline: [
                             {
                                 $match: {
-                                    user_id: { $in: followed_ids },
-                                    type: { $in: [TweetType.Tweet, TweetType.QuoteTweet, TweetType.Retweet] },
-                                    created_at: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }, // Last 7 days
+                                    $expr: { $eq: ['$_id', '$$userId'] },
                                     deleted: false
                                 }
-                            },
-                            { $limit: Math.ceil(limit * 0.7) } // 70% from followed users
+                            }
                         ],
-                        popularTweets: [
+                        as: 'user'
+                    }
+                },
+                { $unwind: { path: '$user' } },
+                {
+                    $match: {
+                        $or: [
+                            { audience: 0 },
+                            {
+                                $and: [{ audience: 1 }, { 'user.twitter_circle': { $in: [user_id_obj] } }]
+                            }
+                        ]
+                    }
+                },
+                { $sort: { created_at: -1 } }
+            ]
+
+            // Get all popular tweets from non-followed users
+            const popularPipeline: any[] = [
+                {
+                    $match: {
+                        user_id: { $nin: followed_ids },
+                        type: { $in: [TweetType.Tweet, TweetType.QuoteTweet] },
+                        deleted: false,
+                        created_at: { $gte: new Date(Date.now() - 1000 * 24 * 60 * 60 * 1000) }
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'users',
+                        let: { userId: '$user_id' },
+                        pipeline: [
                             {
                                 $match: {
-                                    user_id: { $nin: followed_ids }, // Exclude already followed users
-                                    type: { $in: [TweetType.Tweet, TweetType.QuoteTweet] },
-                                    created_at: { $gte: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) }, // Last 3 days
+                                    $expr: { $eq: ['$_id', '$$userId'] },
                                     deleted: false
                                 }
-                            },
-                            // Simple popularity metric: likes + retweets
+                            }
+                        ],
+                        as: 'user'
+                    }
+                },
+                { $unwind: { path: '$user' } },
+                {
+                    $match: {
+                        $or: [
+                            { audience: 0 },
                             {
-                                $lookup: {
-                                    from: 'likes',
-                                    localField: '_id',
-                                    foreignField: 'tweet_id',
-                                    as: 'likes_array'
+                                $and: [{ audience: 1 }, { 'user.twitter_circle': { $in: [user_id_obj] } }]
+                            }
+                        ]
+                    }
+                },
+                // Engagement score
+                {
+                    $lookup: {
+                        from: 'likes',
+                        localField: '_id',
+                        foreignField: 'tweet_id',
+                        as: 'likes_arr'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'tweets',
+                        localField: '_id',
+                        foreignField: 'parent_id',
+                        as: 'children_arr'
+                    }
+                },
+                {
+                    $addFields: {
+                        engagement_score: {
+                            $add: [
+                                { $size: '$likes_arr' },
+                                {
+                                    $size: {
+                                        $filter: {
+                                            input: '$children_arr',
+                                            as: 'item',
+                                            cond: { $eq: ['$$item.type', TweetType.Retweet] }
+                                        }
+                                    }
+                                },
+                                {
+                                    $size: {
+                                        $filter: {
+                                            input: '$children_arr',
+                                            as: 'item',
+                                            cond: { $eq: ['$$item.type', TweetType.Comment] }
+                                        }
+                                    }
+                                },
+                                {
+                                    $size: {
+                                        $filter: {
+                                            input: '$children_arr',
+                                            as: 'item',
+                                            cond: { $eq: ['$$item.type', TweetType.QuoteTweet] }
+                                        }
+                                    }
                                 }
-                            },
-                            {
-                                $lookup: {
-                                    from: 'tweets',
-                                    localField: '_id',
-                                    foreignField: 'parent_id',
-                                    as: 'retweets_array'
+                            ]
+                        }
+                    }
+                },
+                { $sort: { engagement_score: -1, created_at: -1 } }
+            ]
+
+            // Count total items (all possible for-you tweets)
+            const totalItemsResult = await databaseService.tweets
+                .aggregate([
+                    {
+                        $match: {
+                            $or: [{ user_id: { $in: followed_ids } }, { user_id: { $nin: followed_ids } }],
+                            type: { $in: [TweetType.Tweet, TweetType.QuoteTweet, TweetType.Retweet] },
+                            deleted: false
+                        }
+                    }
+                ])
+                .toArray()
+            const totalItems = totalItemsResult.length
+
+            // Get enough tweets to fill the page (overfetch to ensure we have enough)
+            const [followedTweets, popularTweets] = await Promise.all([
+                databaseService.tweets.aggregate([...followedPipeline, { $limit: limit * 3 }]).toArray(),
+                databaseService.tweets.aggregate([...popularPipeline, { $limit: limit * 3 }]).toArray()
+            ])
+
+            // IMPORTANT: Always reserve 2 slots for popular tweets if they exist
+            const minPopularTweets = Math.min(2, popularTweets.length)
+
+            // For each page, skip the appropriate number of popular tweets (for pagination)
+            const skipPopular = (page - 1) * minPopularTweets
+            const pagePopularTweets = popularTweets.slice(skipPopular, skipPopular + minPopularTweets)
+
+            // Use the rest of the slots for followed tweets
+            const maxFollowedTweets = limit - pagePopularTweets.length
+            const pageFollowedTweets = followedTweets.slice(0, maxFollowedTweets)
+
+            // Combine followed and popular, with popular at the start
+            let tweets = [...pagePopularTweets, ...pageFollowedTweets]
+
+            // If we don't have enough tweets to fill the page, add more popular tweets
+            if (tweets.length < limit) {
+                const usedIds = new Set(tweets.map((t) => t._id.toString()))
+                const additionalPopular = popularTweets
+                    .filter((t) => !usedIds.has(t._id.toString()))
+                    .slice(0, limit - tweets.length)
+                tweets = [...tweets, ...additionalPopular]
+            }
+
+            // Still not full? Add more followed tweets (avoiding duplicates)
+            if (tweets.length < limit) {
+                const usedIds = new Set(tweets.map((t) => t._id.toString()))
+                const additionalFollowed = followedTweets
+                    .filter((t) => !usedIds.has(t._id.toString()))
+                    .slice(pageFollowedTweets.length, pageFollowedTweets.length + (limit - tweets.length))
+                tweets = [...tweets, ...additionalFollowed]
+            }
+
+            // Final slice to ensure we don't exceed the limit
+            tweets = tweets.slice(0, limit)
+
+            // If tweets is empty, return early
+            if (tweets.length === 0) return { tweets: [], totalItems }
+
+            const tweetIds = tweets.map((t) => t._id)
+            const enrichPipeline: any[] = [
+                { $match: { _id: { $in: tweetIds } } },
+                {
+                    $lookup: {
+                        from: 'hashtags',
+                        localField: 'hashtags',
+                        foreignField: '_id',
+                        as: 'hashtags'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'mentions',
+                        foreignField: '_id',
+                        as: 'mentions'
+                    }
+                },
+                {
+                    $addFields: {
+                        mentions: {
+                            $map: {
+                                input: '$mentions',
+                                as: 'mention',
+                                in: {
+                                    _id: '$$mention._id',
+                                    name: '$$mention.name'
                                 }
-                            },
-                            {
-                                $addFields: {
-                                    popularity_score: {
-                                        $add: [
-                                            { $size: '$likes_array' },
-                                            {
-                                                $size: {
-                                                    $filter: {
-                                                        input: '$retweets_array',
-                                                        as: 'item',
-                                                        cond: { $eq: ['$$item.type', TweetType.Retweet] }
+                            }
+                        }
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'bookmarks',
+                        localField: '_id',
+                        foreignField: 'tweet_id',
+                        as: 'bookmarks'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'likes',
+                        localField: '_id',
+                        foreignField: 'tweet_id',
+                        as: 'likes'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'tweets',
+                        localField: '_id',
+                        foreignField: 'parent_id',
+                        as: 'tweet_children'
+                    }
+                },
+                {
+                    $addFields: {
+                        bookmarked: {
+                            $in: [user_id_obj, '$bookmarks.user_id']
+                        },
+                        liked: {
+                            $in: [user_id_obj, '$likes.user_id']
+                        },
+                        reposted: {
+                            $cond: {
+                                if: {
+                                    $gt: [
+                                        {
+                                            $size: {
+                                                $filter: {
+                                                    input: '$tweet_children',
+                                                    as: 'child',
+                                                    cond: {
+                                                        $and: [
+                                                            { $eq: ['$$child.user_id', user_id_obj] },
+                                                            {
+                                                                $in: [
+                                                                    '$$child.type',
+                                                                    [TweetType.Retweet, TweetType.QuoteTweet]
+                                                                ]
+                                                            }
+                                                        ]
                                                     }
                                                 }
                                             }
-                                        ]
-                                    }
-                                }
-                            },
-                            { $sort: { popularity_score: -1 } },
-                            { $limit: Math.ceil(limit * 0.3) } // 30% from popular tweets
-                        ]
+                                        },
+                                        0
+                                    ]
+                                },
+                                then: true,
+                                else: false
+                            }
+                        }
                     }
                 },
-                // Combine the results
+                {
+                    $addFields: {
+                        bookmarks: { $size: '$bookmarks' },
+                        likes: { $size: '$likes' },
+                        retweet_count: {
+                            $size: {
+                                $filter: {
+                                    input: '$tweet_children',
+                                    as: 'item',
+                                    cond: { $eq: ['$$item.type', TweetType.Retweet] }
+                                }
+                            }
+                        },
+                        comment_count: {
+                            $size: {
+                                $filter: {
+                                    input: '$tweet_children',
+                                    as: 'item',
+                                    cond: { $eq: ['$$item.type', TweetType.Comment] }
+                                }
+                            }
+                        },
+                        quote_count: {
+                            $size: {
+                                $filter: {
+                                    input: '$tweet_children',
+                                    as: 'item',
+                                    cond: { $eq: ['$$item.type', TweetType.QuoteTweet] }
+                                }
+                            }
+                        }
+                    }
+                },
                 {
                     $project: {
-                        tweets: { $concatArrays: ['$followedTweets', '$popularTweets'] }
+                        tweet_children: 0,
+                        user_id: 0,
+                        user: {
+                            email: 0,
+                            password: 0,
+                            email_verify_token: 0,
+                            forgot_password_token: 0,
+                            twitter_circle: 0,
+                            date_of_birth: 0,
+                            location: 0,
+                            website: 0,
+                            created_at: 0,
+                            updated_at: 0,
+                            cover_photo: 0
+                        }
                     }
-                },
-                { $unwind: '$tweets' },
-                { $replaceRoot: { newRoot: '$tweets' } }
-            )
+                }
+            ]
+            const enriched = await databaseService.tweets.aggregate(enrichPipeline).toArray()
+            // Return in the same order as tweets
+            const enrichedMap = new Map(enriched.map((t) => [t._id.toString(), t]))
+            const ordered = tweetIds.map((id) => enrichedMap.get(id.toString())).filter(Boolean)
+            return { tweets: ordered, totalItems }
         }
-
-        // Step 2: Join with user collection
-        pipeline.push(
-            {
-                $lookup: {
-                    from: 'users',
-                    let: { userId: '$user_id' },
-                    pipeline: [
-                        {
-                            $match: {
-                                $expr: { $eq: ['$_id', '$$userId'] },
-                                deleted: false
-                            }
-                        }
-                    ],
-                    as: 'user'
-                }
-            },
-            {
-                $unwind: {
-                    path: '$user'
-                }
-            }
-        )
-
-        // Step 3: Filter by audience
-        pipeline.push({
-            $match: {
-                $or: [
-                    { audience: 0 }, // Everyone
-                    {
-                        $and: [
-                            { audience: 1 }, // Twitter Circle
-                            { 'user.twitter_circle': { $in: [user_id_obj] } }
-                        ]
-                    }
-                ]
-            }
-        })
-
-        // Step 4: Sort by recency (most recent first)
-        pipeline.push({ $sort: { created_at: -1 } })
-
-        // Step 5: Count total items before proceeding with pagination
-        pipeline.push({ $count: 'totalItems' })
-        const totalItemsResult = await databaseService.tweets.aggregate(pipeline).toArray()
-        const totalItems = totalItemsResult.length > 0 ? totalItemsResult[0].totalItems : 0
-        pipeline.pop()
-
-        // Step 6: Pagination
-        pipeline.push({ $skip: (page - 1) * limit }, { $limit: limit })
-
-        // Step 7: Enrich with related data
-        pipeline.push(
-            // Hashtags
-            {
-                $lookup: {
-                    from: 'hashtags',
-                    localField: 'hashtags',
-                    foreignField: '_id',
-                    as: 'hashtags'
-                }
-            },
-            // Mentions
-            {
-                $lookup: {
-                    from: 'users',
-                    localField: 'mentions',
-                    foreignField: '_id',
-                    as: 'mentions'
-                }
-            },
-            {
-                $addFields: {
-                    mentions: {
-                        $map: {
-                            input: '$mentions',
-                            as: 'mention',
-                            in: {
-                                _id: '$$mention._id',
-                                name: '$$mention.name'
-                            }
-                        }
-                    }
-                }
-            },
-            // Bookmarks
-            {
-                $lookup: {
-                    from: 'bookmarks',
-                    localField: '_id',
-                    foreignField: 'tweet_id',
-                    as: 'bookmarks'
-                }
-            },
-            // Likes
-            {
-                $lookup: {
-                    from: 'likes',
-                    localField: '_id',
-                    foreignField: 'tweet_id',
-                    as: 'likes'
-                }
-            },
-            // Children tweets (for counts)
-            {
-                $lookup: {
-                    from: 'tweets',
-                    localField: '_id',
-                    foreignField: 'parent_id',
-                    as: 'tweet_children'
-                }
-            },
-            // Has user bookmarked/liked
-            {
-                $addFields: {
-                    bookmarked: {
-                        $in: [user_id_obj, '$bookmarks.user_id']
-                    },
-                    liked: {
-                        $in: [user_id_obj, '$likes.user_id']
-                    },
-                    reposted: {
-                        $cond: {
-                            if: {
-                                $gt: [
-                                    {
-                                        $size: {
-                                            $filter: {
-                                                input: '$tweet_children',
-                                                as: 'child',
-                                                cond: {
-                                                    $and: [
-                                                        { $eq: ['$$child.user_id', user_id_obj] },
-                                                        {
-                                                            $in: [
-                                                                '$$child.type',
-                                                                [TweetType.Retweet, TweetType.QuoteTweet]
-                                                            ]
-                                                        }
-                                                    ]
-                                                }
-                                            }
-                                        }
-                                    },
-                                    0
-                                ]
-                            },
-                            then: true,
-                            else: false
-                        }
-                    }
-                }
-            },
-            // Add counts
-            {
-                $addFields: {
-                    bookmarks: { $size: '$bookmarks' },
-                    likes: { $size: '$likes' },
-                    retweet_count: {
-                        $size: {
-                            $filter: {
-                                input: '$tweet_children',
-                                as: 'item',
-                                cond: { $eq: ['$$item.type', TweetType.Retweet] }
-                            }
-                        }
-                    },
-                    comment_count: {
-                        $size: {
-                            $filter: {
-                                input: '$tweet_children',
-                                as: 'item',
-                                cond: { $eq: ['$$item.type', TweetType.Comment] }
-                            }
-                        }
-                    },
-                    quote_count: {
-                        $size: {
-                            $filter: {
-                                input: '$tweet_children',
-                                as: 'item',
-                                cond: { $eq: ['$$item.type', TweetType.QuoteTweet] }
-                            }
-                        }
-                    }
-                }
-            },
-            // Project final shape
-            {
-                $project: {
-                    tweet_children: 0,
-                    user_id: 0,
-                    user: {
-                        email: 0,
-                        password: 0,
-                        email_verify_token: 0,
-                        forgot_password_token: 0,
-                        twitter_circle: 0,
-                        date_of_birth: 0,
-                        location: 0,
-                        website: 0,
-                        created_at: 0,
-                        updated_at: 0,
-                        cover_photo: 0
-                    }
-                }
-            }
-        )
-
-        // Execute aggregation pipeline
-        const tweets = await databaseService.tweets.aggregate(pipeline).toArray()
-        // Don't handle increasing views here, let client do that
-        return { tweets, totalItems }
     }
 }
 

@@ -70,6 +70,7 @@ export const getNewsFeedController = async (req: Request<ParamsDictionary, any, 
         limit,
         source
     })
+    console.log(totalItems)
     return res.json({
         message: tweetMessages.newsFeedRetrieved,
         result: {
