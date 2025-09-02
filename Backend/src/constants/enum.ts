@@ -1,7 +1,7 @@
 export enum UserVerifyStatus {
-    Unverified, // 0
-    Verified, // 1
-    Banned, // 2
+    Unverified,
+    Verified,
+    Banned,
     Private
 }
 
@@ -40,4 +40,16 @@ export enum TweetAudience {
 export enum NewsFeedType {
     ForYou = 'for-you',
     Following = 'following'
+}
+
+export enum SearchType {
+    Top,
+    Latest,
+    People,
+    Media
+}
+
+export enum SearchSource {
+    Anyone,
+    Following
 }
