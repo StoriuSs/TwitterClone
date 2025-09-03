@@ -1,17 +1,7 @@
 import { defineStore } from 'pinia'
 import api from '@/lib/api'
-import type { TweetType, NewTweetData, TrendingTopic, FollowSuggestion } from '@/interfaces/tweet.interface'
+import type { NewTweetData, TweetsState } from '@/interfaces/tweet.interface'
 import { extractErrorMessage } from '@/interfaces/error.interface'
-
-interface TweetsState {
-    tweets: TweetType[]
-    trendingTopics: TrendingTopic[]
-    whoToFollow: FollowSuggestion[]
-    loading: boolean
-    error: string | null
-    currentPage: number
-    totalPages: number
-}
 
 export const useTweetsStore = defineStore('tweets', {
     state: (): TweetsState => ({

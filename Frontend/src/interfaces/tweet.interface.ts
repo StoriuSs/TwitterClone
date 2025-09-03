@@ -7,6 +7,16 @@ export interface TweetStats {
     views: number
 }
 
+export interface TweetsState {
+    tweets: TweetType[]
+    trendingTopics: TrendingTopic[]
+    whoToFollow: FollowSuggestion[]
+    loading: boolean
+    error: string | null
+    currentPage: number
+    totalPages: number
+}
+
 export interface TweetMedia {
     url: string
     type: 'image' | 'video'
