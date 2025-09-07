@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Heart, MessageCircle, MoreHorizontal, Repeat, Share, Bookmark } from 'lucide-vue-next'
+import { Heart, MessageCircle, MoreHorizontal, Repeat, Eye, Bookmark } from 'lucide-vue-next'
 import { ref } from 'vue'
 import type { TweetType } from '@/interfaces/tweet.interface'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
@@ -63,13 +63,6 @@ const handleBookmark = () => {
                 <div class="flex items-center">
                     <div>
                         <span class="font-bold hover:underline">{{ tweet.user?.name }}</span>
-                        <span v-if="tweet.user?.verify" class="ml-1 text-blue-500">
-                            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                                <path
-                                    d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.818-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.437 2.25c-.415-.165-.866-.25-1.336-.25-2.11 0-3.818 1.79-3.818 4 0 .494.083.964.237 1.4-1.272.65-2.147 2.018-2.147 3.6 0 1.495.782 2.798 1.942 3.486-.02.17-.032.34-.032.514 0 2.21 1.708 4 3.818 4 .47 0 .92-.086 1.335-.25.62 1.334 1.926 2.25 3.437 2.25 1.512 0 2.818-.916 3.437-2.25.415.163.865.248 1.336.248 2.11 0 3.818-1.79 3.818-4 0-.174-.012-.344-.033-.513 1.158-.687 1.943-1.99 1.943-3.484zm-6.616-3.334l-4.334 6.5c-.145.217-.382.334-.625.334-.143 0-.288-.04-.416-.126l-.115-.094-2.415-2.415c-.293-.293-.293-.768 0-1.06s.768-.294 1.06 0l1.77 1.767 3.825-5.74c.23-.345.696-.436 1.04-.207.346.23.437.695.21 1.04z"
-                                ></path>
-                            </svg>
-                        </span>
                     </div>
                     <div class="flex text-gray-500 dark:text-gray-400 ml-1">
                         <span class="hover:underline">@{{ tweet.user?.username }}</span>
@@ -148,8 +141,8 @@ const handleBookmark = () => {
                     </div>
                 </div>
                 <div class="mt-4 flex justify-between max-w-lg">
+                    <!-- Reply -->
                     <button
-                        @click="handleLike"
                         class="group flex items-center text-gray-500 dark:text-gray-400 hover:text-blue-500 transition-colors"
                     >
                         <div
@@ -159,6 +152,7 @@ const handleBookmark = () => {
                         </div>
                         <span class="ml-1 text-sm">{{ tweet.stats?.replies || 0 }}</span>
                     </button>
+                    <!-- Retweet -->
                     <button
                         @click="handleRetweet"
                         class="group flex items-center"
@@ -178,6 +172,7 @@ const handleBookmark = () => {
                         </div>
                         <span class="ml-1 text-sm">{{ tweet.stats?.retweets || 0 }}</span>
                     </button>
+                    <!-- Like -->
                     <button
                         @click="handleLike"
                         class="group flex items-center"
@@ -197,15 +192,35 @@ const handleBookmark = () => {
                             isLiked ? (tweet.stats?.likes || 0) + 1 : tweet.stats?.likes || 0
                         }}</span>
                     </button>
+                    <!-- Bookmark -->
                     <button
                         @click="handleBookmark"
                         class="group flex items-center"
-                        :class="isBookmarked ? 'text-blue-500' : 'text-gray-500 dark:text-gray-400 hover:text-blue-500'"
+                        :class="
+                            isBookmarked ? 'text-yellow-500' : 'text-gray-500 dark:text-gray-400 hover:text-yellow-500'
+                        "
+                    >
+                        <div
+                            class="p-2 rounded-full transition-colors"
+                            :class="
+                                isBookmarked
+                                    ? 'bg-yellow-50 dark:bg-yellow-900/30'
+                                    : 'group-hover:bg-yellow-50 dark:group-hover:bg-yellow-900/30'
+                            "
+                        >
+                            <Bookmark class="w-5 h-5" :class="isBookmarked ? 'fill-yellow-500' : ''" />
+                        </div>
+                    </button>
+                    <!-- Views -->
+                    <button
+                        class="group flex items-center text-gray-500 dark:text-gray-400 hover:text-blue-500 transition-colors"
+                        style="cursor: default"
+                        tabindex="-1"
                     >
                         <div
                             class="p-2 rounded-full group-hover:bg-blue-50 dark:group-hover:bg-blue-900/30 transition-colors"
                         >
-                            <Share class="w-5 h-5" />
+                            <Eye class="w-5 h-5" />
                         </div>
                         <span class="ml-1 text-sm">{{ tweet.stats?.views || 0 }}</span>
                     </button>

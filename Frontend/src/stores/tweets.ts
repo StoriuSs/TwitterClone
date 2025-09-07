@@ -20,7 +20,7 @@ export const useTweetsStore = defineStore('tweets', {
             this.error = null
 
             try {
-                const response = await api.get('/tweets/news-feed', {
+                const response = await api.get('/tweets', {
                     params: { page, limit, source }
                 })
 

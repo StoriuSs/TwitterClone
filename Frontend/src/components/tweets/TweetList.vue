@@ -1,58 +1,41 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
-import { useTweetsStore } from '@/stores/tweets'
 import TweetItem from './TweetItem.vue'
+import Spinner from '../ui/Spinner.vue'
 
 const props = defineProps<{
-    feedType?: string
+    tweets: any[]
+    loading: boolean
+    currentPage: number
+    totalPages: number
+    loadMoreTweets: () => void
+    isLoadingMore?: boolean
 }>()
-
-const tweetsStore = useTweetsStore()
-const isLoadingMore = ref(false)
-
-onMounted(async () => {
-    await tweetsStore.fetchNewsFeed()
-})
-
-// Watch for changes in feed type and refresh when it changes
-watch(
-    () => props.feedType,
-    async (newFeedType) => {
-        if (newFeedType) {
-            await tweetsStore.fetchNewsFeed(1) // Reset to first page when switching tabs
-        }
-    }
-)
-
-const loadMoreTweets = async () => {
-    if (tweetsStore.currentPage < tweetsStore.totalPages && !isLoadingMore.value) {
-        isLoadingMore.value = true
-        await tweetsStore.fetchNewsFeed(tweetsStore.currentPage + 1)
-        isLoadingMore.value = false
-    }
-}
 </script>
 
 <template>
     <div class="w-full">
-        <div v-if="tweetsStore.loading && tweetsStore.tweets.length === 0" class="p-6 text-center">
-            <p class="text-gray-500 dark:text-gray-400 text-lg">Loading tweets...</p>
+        <div v-if="props.loading && props.tweets.length === 0" class="p-6 text-center">
+            <Spinner />
         </div>
-        <div v-else-if="tweetsStore.tweets.length === 0" class="p-6 text-center">
+        <div v-else-if="props.tweets.length === 0" class="p-6 text-center">
             <p class="text-gray-500 dark:text-gray-400 text-lg">No tweets to display.</p>
             <p class="text-gray-500 dark:text-gray-400 mt-2">Follow people or post something to get started!</p>
         </div>
         <template v-else>
-            <TweetItem v-for="tweet in tweetsStore.tweets" :key="tweet._id" :tweet="tweet" />
+            <TweetItem v-for="tweet in props.tweets" :key="tweet._id" :tweet="tweet" />
 
             <div class="p-6 text-center">
                 <button
-                    v-if="tweetsStore.currentPage < tweetsStore.totalPages"
-                    @click="loadMoreTweets"
-                    class="px-6 py-3 text-blue-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full font-medium"
-                    :disabled="isLoadingMore"
+                    v-if="props.currentPage < props.totalPages"
+                    @click="props.loadMoreTweets"
+                    class="px-6 py-3 text-blue-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full font-medium flex items-center justify-center gap-2"
+                    :disabled="props.isLoadingMore"
                 >
-                    {{ isLoadingMore ? 'Loading...' : 'Load more tweets' }}
+                    <template v-if="props.isLoadingMore">
+                        <Spinner class="h-5 w-5" />
+                        Loading...
+                    </template>
+                    <template v-else> Load more tweets </template>
                 </button>
                 <p v-else class="text-gray-500 dark:text-gray-400 text-lg">No more tweets to load</p>
             </div>

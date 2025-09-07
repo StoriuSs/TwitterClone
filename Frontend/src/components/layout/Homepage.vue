@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useTweetsStore } from '@/stores/tweets'
-import Player from '../player/Player.vue'
 import { X, Search } from 'lucide-vue-next'
 
 import Sidebar from './Sidebar.vue'
@@ -17,6 +16,11 @@ const tweetsStore = useTweetsStore()
 const activeTab = ref('for-you') // Options: 'for-you', 'following'
 const isComposing = ref(false)
 
+// Fetch tweets when component is mounted
+onMounted(async () => {
+    await tweetsStore.fetchNewsFeed(1, 10, activeTab.value)
+})
+
 const openComposer = () => {
     isComposing.value = true
 }
@@ -25,10 +29,22 @@ const closeComposer = () => {
     isComposing.value = false
 }
 
+const isLoadingMore = ref(false)
+
 const switchTab = async (tab: string) => {
     activeTab.value = tab
-    // Update the feed based on the selected tab
+    // Clear tweets and set loading before fetching new feed
+    tweetsStore.tweets = []
+    tweetsStore.loading = true
     await tweetsStore.fetchNewsFeed(1, 10, tab)
+}
+
+const loadMoreTweets = async () => {
+    if (tweetsStore.currentPage < tweetsStore.totalPages && !isLoadingMore.value) {
+        isLoadingMore.value = true
+        await tweetsStore.fetchNewsFeed(tweetsStore.currentPage + 1, 10, activeTab.value)
+        isLoadingMore.value = false
+    }
 }
 
 const handleTweetPosted = async () => {
@@ -38,18 +54,18 @@ const handleTweetPosted = async () => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white">
+    <div class="h-screen bg-white dark:bg-black text-gray-900 dark:text-white">
         <!-- Main layout with centered content -->
-        <div class="flex justify-center min-h-screen transition-all duration-300 max-w-7xl mx-auto relative">
+        <div class="flex justify-center h-screen transition-all duration-300 max-w-7xl mx-auto relative">
             <!-- Left sidebar placeholder for mobile (where sidebar is fixed) -->
             <div class="w-[68px] sm:w-[68px] md:w-[88px] lg:hidden shrink-0 max-[420px]:hidden"></div>
 
             <!-- Sidebar - fixed on mobile, static on larger screens -->
             <Sidebar :open-composer="openComposer" active-page="home" />
 
-            <!-- Main content - Feed (add bottom padding for mobile bottom nav on smallest screens) -->
+            <!-- Main content - Feed (scrollable) -->
             <main
-                class="border-r border-gray-200 dark:border-gray-800 min-h-screen max-[420px]:pb-[60px] md:pb-0 w-full max-w-[600px] flex-grow"
+                class="border-r border-gray-200 dark:border-gray-800 h-screen max-[420px]:pb-[60px] md:pb-0 w-full max-w-[600px] flex-grow overflow-y-auto"
             >
                 <!-- Header -->
                 <div
@@ -121,14 +137,15 @@ const handleTweetPosted = async () => {
 
                 <!-- Feed -->
                 <div>
-                    <!-- Video component -->
-                    <div class="border-b border-gray-200 dark:border-gray-800 p-4">
-                        <h2 class="text-xl font-bold mb-4">Featured Video</h2>
-                        <Player class="w-full rounded-xl overflow-hidden" />
-                    </div>
-
                     <!-- Tweets -->
-                    <TweetList :feed-type="activeTab" />
+                    <TweetList
+                        :tweets="tweetsStore.tweets"
+                        :loading="tweetsStore.loading"
+                        :current-page="tweetsStore.currentPage"
+                        :total-pages="tweetsStore.totalPages"
+                        :load-more-tweets="loadMoreTweets"
+                        :is-loading-more="isLoadingMore"
+                    />
                 </div>
             </main>
 
