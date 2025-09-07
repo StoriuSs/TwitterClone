@@ -677,6 +677,22 @@ class TweetsService {
                 { $match: { _id: { $in: tweetIds } } },
                 {
                     $lookup: {
+                        from: 'users',
+                        let: { userId: '$user_id' },
+                        pipeline: [
+                            {
+                                $match: {
+                                    $expr: { $eq: ['$_id', '$$userId'] },
+                                    deleted: false
+                                }
+                            }
+                        ],
+                        as: 'user'
+                    }
+                },
+                { $unwind: { path: '$user' } },
+                {
+                    $lookup: {
                         from: 'hashtags',
                         localField: 'hashtags',
                         foreignField: '_id',
