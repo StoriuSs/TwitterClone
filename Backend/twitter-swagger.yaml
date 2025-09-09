@@ -6,7 +6,7 @@ info:
     contact:
         name: StoriuSs
 servers:
-    - url: http://localhost:4000/api
+    - url: http://localhost:8888/api
       description: Development server
 paths:
     /users/register:
