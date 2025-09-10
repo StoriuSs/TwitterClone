@@ -53,8 +53,8 @@ const handleLogout = async () => {
 
             <!-- Navigation -->
             <nav class="space-y-2 w-full max-[420px]:flex max-[420px]:space-y-0 max-[420px]:justify-around">
-                <a
-                    href="#"
+                <router-link
+                    to="/"
                     :class="[
                         'flex items-center justify-center lg:justify-start p-3 rounded-full w-[56px] lg:w-full mx-auto lg:mx-0 max-[420px]:p-2',
                         activePage === 'home'
@@ -68,7 +68,7 @@ const handleLogout = async () => {
                         :class="{ 'font-bold': activePage === 'home' }"
                         >Home</span
                     >
-                </a>
+                </router-link>
                 <a
                     href="#"
                     :class="[
@@ -134,8 +134,8 @@ const handleLogout = async () => {
                         >Bookmarks</span
                     >
                 </a>
-                <a
-                    href="#"
+                <router-link
+                    :to="currentUser.username ? `/profile/${currentUser.username}` : '#'"
                     :class="[
                         'flex items-center justify-center lg:justify-start p-3 rounded-full w-[56px] lg:w-full mx-auto lg:mx-0',
                         activePage === 'profile'
@@ -149,7 +149,7 @@ const handleLogout = async () => {
                         :class="{ 'font-bold': activePage === 'profile' }"
                         >Profile</span
                     >
-                </a>
+                </router-link>
                 <a
                     href="#"
                     :class="[

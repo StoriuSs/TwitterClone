@@ -1,6 +1,11 @@
 import { defineStore } from 'pinia'
 import api from '@/lib/api'
-import type { UserRegistrationDataType, UserLoginDataType, AuthStateType } from '@/interfaces/auth.interface'
+import type {
+    UserRegistrationDataType,
+    UserLoginDataType,
+    AuthStateType,
+    UpdateProfileDataType
+} from '@/interfaces/auth.interface'
 import { extractErrorMessage } from '@/interfaces/error.interface'
 
 export const useAuthStore = defineStore('auth', {
@@ -90,8 +95,39 @@ export const useAuthStore = defineStore('auth', {
             try {
                 const response = await api.get('/users/about-me')
                 this.user = response.data.result
+
+                // Update localStorage with fresh user data
+                localStorage.setItem('user', JSON.stringify(response.data.result))
             } catch (error) {
                 this.error = extractErrorMessage(error)
+            } finally {
+                this.loading = false
+            }
+        },
+
+        async updateProfile(profileData: UpdateProfileDataType) {
+            this.loading = true
+            this.error = null
+
+            try {
+                const response = await api.patch('/users/about-me', profileData)
+                this.user = response.data.result
+
+                // Update localStorage with updated user data
+                localStorage.setItem('user', JSON.stringify(response.data.result))
+
+                return {
+                    success: true,
+                    data: response.data.result
+                }
+            } catch (error) {
+                console.error('Update profile error:', error)
+                this.error = extractErrorMessage(error)
+
+                return {
+                    success: false,
+                    error: this.error
+                }
             } finally {
                 this.loading = false
             }

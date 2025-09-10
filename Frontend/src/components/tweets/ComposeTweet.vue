@@ -22,7 +22,6 @@ const tweetContent = ref('')
 const isPosting = ref(false)
 const selectedImages = ref<File[]>([])
 const imageURLs = ref<string[]>([])
-const showEmojiPicker = ref(false)
 const MAX_CHARS = 280
 
 // Auto-resize textarea
@@ -63,9 +62,9 @@ const charCountColor = computed(() => {
     return 'text-gray-500 dark:text-gray-400'
 })
 
-const isDisabled = computed(() => {
-    return !tweetContent.value.trim() || charCount.value > MAX_CHARS || isPosting.value
-})
+// const isDisabled = computed(() => {
+//     return !tweetContent.value.trim() || charCount.value > MAX_CHARS || isPosting.value
+// })
 
 const handleImageUpload = (event: Event) => {
     const input = event.target as HTMLInputElement
@@ -141,15 +140,18 @@ const postTweet = async () => {
 </script>
 
 <template>
-    <div class="flex max-w-4xl mx-auto" :class="{ 'p-5': !isModal, 'p-0': isModal }">
+    <div class="flex max-w-4xl mx-auto" :class="{ 'p-5': !isModal, 'px-4 py-3': isModal }">
         <div class="flex-shrink-0">
             <Avatar class="w-12 h-12">
                 <AvatarImage :src="currentUser.avatar || 'https://placehold.co/400'" alt="Profile" />
-                <AvatarFallback>{{ currentUser.name.charAt(0) }}</AvatarFallback>
+                <AvatarFallback
+                    class="bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-200 text-lg font-medium"
+                >
+                    {{ currentUser.name.charAt(0) }}
+                </AvatarFallback>
             </Avatar>
         </div>
         <div class="ml-4 flex-1">
-            <!-- Who can reply indicator -->
             <div class="mb-2">
                 <button
                     class="inline-flex items-center px-3 py-1 rounded-full border border-blue-400 text-blue-500 text-sm hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
@@ -177,8 +179,8 @@ const postTweet = async () => {
                 ref="textarea"
                 v-model="tweetContent"
                 placeholder="What's happening?"
-                class="w-full bg-transparent border-none outline-none text-xl resize-none leading-relaxed mb-2"
-                :class="{ 'min-h-[80px]': !isModal, 'min-h-[120px]': isModal }"
+                class="w-full bg-transparent border-none outline-none text-xl resize-none leading-relaxed mb-2 placeholder-gray-500 dark:placeholder-gray-400 font-normal"
+                :class="{ 'min-h-[80px]': !isModal, 'min-h-[140px]': isModal }"
                 :autofocus="isModal"
             ></textarea>
 
@@ -215,19 +217,21 @@ const postTweet = async () => {
 
             <div class="flex items-center justify-between">
                 <!-- Media buttons -->
-                <div class="flex space-x-1 text-blue-500">
+                <div class="flex space-x-2 text-blue-500">
                     <!-- Image upload button with hidden input -->
-                    <label class="p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/40 cursor-pointer">
+                    <label
+                        class="p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/40 cursor-pointer transition-colors"
+                    >
                         <Image class="w-5 h-5" />
                         <input type="file" multiple accept="image/*" class="hidden" @change="handleImageUpload" />
                     </label>
-                    <button class="p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/40">
+                    <button class="p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors">
                         <Smile class="w-5 h-5" />
                     </button>
-                    <button class="p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/40">
+                    <button class="p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors">
                         <Calendar class="w-5 h-5" />
                     </button>
-                    <button class="p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/40">
+                    <button class="p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors">
                         <MapPin class="w-5 h-5" />
                     </button>
                 </div>
@@ -270,7 +274,7 @@ const postTweet = async () => {
                     <Button
                         @click="postTweet"
                         variant="default"
-                        class="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 rounded-full px-5 py-2 text-white font-bold text-base transition-all"
+                        class="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 rounded-full px-6 py-2.5 text-white font-bold text-base transition-all shadow-sm"
                         :disabled="!tweetContent.trim() || charCount > MAX_CHARS || isPosting"
                         :class="{
                             'opacity-50 cursor-not-allowed': !tweetContent.trim() || charCount > MAX_CHARS || isPosting

@@ -25,6 +25,17 @@ interface UserType {
     website?: string
 }
 
+interface UpdateProfileDataType {
+    name?: string
+    username?: string
+    bio?: string
+    location?: string
+    website?: string
+    avatar?: string
+    cover_photo?: string
+    date_of_birth?: string
+}
+
 interface AuthStateType {
     user: UserType | null
     accessToken: string | ''
@@ -35,4 +46,4 @@ interface AuthStateType {
     error: string | null
 }
 
-export type { UserRegistrationDataType, UserLoginDataType, UserType, AuthStateType }
+export type { UserRegistrationDataType, UserLoginDataType, UserType, AuthStateType, UpdateProfileDataType }

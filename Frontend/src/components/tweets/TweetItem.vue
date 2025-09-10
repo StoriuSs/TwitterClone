@@ -54,18 +54,30 @@ const handleBookmark = () => {
     >
         <div class="flex max-w-4xl mx-auto">
             <div class="flex-shrink-0">
-                <Avatar class="w-12 h-12 hover:opacity-90 transition-opacity">
-                    <AvatarImage :src="tweet.user?.avatar || 'https://placehold.co/400?text=User'" alt="Profile" />
-                    <AvatarFallback>{{ tweet.user?.name?.[0] || 'U' }}</AvatarFallback>
-                </Avatar>
+                <router-link :to="tweet.user?.username ? `/profile/${tweet.user.username}` : '#'">
+                    <Avatar class="w-12 h-12 hover:opacity-90 transition-opacity">
+                        <AvatarImage :src="tweet.user?.avatar || 'https://placehold.co/400?text=User'" alt="Profile" />
+                        <AvatarFallback>{{ tweet.user?.name?.[0] || 'U' }}</AvatarFallback>
+                    </Avatar>
+                </router-link>
             </div>
             <div class="ml-3 flex-1">
                 <div class="flex items-center">
                     <div>
-                        <span class="font-bold hover:underline">{{ tweet.user?.name }}</span>
+                        <router-link
+                            :to="tweet.user?.username ? `/profile/${tweet.user.username}` : '#'"
+                            class="font-bold hover:underline"
+                        >
+                            {{ tweet.user?.name }}
+                        </router-link>
                     </div>
                     <div class="flex text-gray-500 dark:text-gray-400 ml-1">
-                        <span class="hover:underline">@{{ tweet.user?.username }}</span>
+                        <router-link
+                            :to="tweet.user?.username ? `/profile/${tweet.user.username}` : '#'"
+                            class="hover:underline"
+                        >
+                            @{{ tweet.user?.username }}
+                        </router-link>
                         <span v-if="tweet.created_at" class="mx-1">·</span>
                         <span
                             v-if="tweet.created_at"
