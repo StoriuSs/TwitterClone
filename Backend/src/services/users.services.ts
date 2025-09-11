@@ -24,6 +24,7 @@ import { ErrorsWithStatus } from '~/models/Errors'
 import httpStatus from '~/constants/httpStatus'
 import axios from 'axios'
 import ms from 'ms'
+import { sendResetPasswordEmail, sendVerifyEmail } from '~/utils/email'
 
 class UsersService {
     private signAccessToken(user_id: string, verify: UserVerifyStatus) {
@@ -132,6 +133,9 @@ class UsersService {
                 expires_at: new Date(Date.now() + ms('7d'))
             })
         )
+
+        // Send verification email
+        await sendVerifyEmail(payload.email as string, email_verify_token)
         return {
             access_token,
             refresh_token,
@@ -223,7 +227,7 @@ class UsersService {
         }
     }
 
-    async resendVerifyEmail(user_id: string) {
+    async resendVerifyEmail(user_id: string, email: string) {
         const email_verify_token = crypto.randomBytes(32).toString('hex')
         await databaseService.users.updateOne(
             { _id: new ObjectId(user_id), deleted: false },
@@ -234,15 +238,14 @@ class UsersService {
                 $currentDate: { updated_at: true }
             }
         )
-        // Here we would typically send the email with the token
-        // For now, we just return the message for testing purposes
+        await sendVerifyEmail(email, email_verify_token)
         return {
             message: userMessages.emailVerifyEmailResent,
             email_verify_token
         }
     }
 
-    async forgotPassword(user_id: string, verify: UserVerifyStatus) {
+    async forgotPassword(user_id: string, verify: UserVerifyStatus, email: string) {
         const forgot_password_token = this.signForgotPasswordToken(user_id, verify)
         await databaseService.users.updateOne(
             { _id: new ObjectId(user_id), deleted: false },
@@ -253,8 +256,7 @@ class UsersService {
                 $currentDate: { updated_at: true }
             }
         )
-        // Here we would typically send the email with the token
-        // For now, we just return the message for testing purposes
+        await sendResetPasswordEmail(email, forgot_password_token)
         return {
             message: userMessages.forgotPasswordEmailSent,
             forgot_password_token
