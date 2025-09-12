@@ -111,7 +111,7 @@ const submitForm = async () => {
                         id="email"
                         v-model="email"
                         type="text"
-                        placeholder="Email or phone number"
+                        placeholder="Email"
                         class="mt-1 bg-white dark:bg-gray-800 dark:text-white dark:border-gray-700"
                         required
                     />

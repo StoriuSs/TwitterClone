@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useTweetsStore } from '@/stores/tweets'
+import { useAuthStore } from '@/stores/auth'
 
 import ComposeTweet from '@/components/tweets/ComposeTweet.vue'
 import TweetList from '@/components/tweets/TweetList.vue'
 
+const router = useRouter()
 const tweetsStore = useTweetsStore()
+const authStore = useAuthStore()
 
 const activeTab = ref('for-you') // Options: 'for-you', 'following'
 const isLoadingMore = ref(false)
@@ -14,9 +18,18 @@ const isInitialLoading = ref(true) // Track initial loading state
 // Fetch tweets when component is mounted
 onMounted(async () => {
     try {
-        // Always fetch fresh tweets on page load/refresh
+        if (!authStore.user) {
+            await authStore.getUserInfo()
+        }
+
         tweetsStore.tweets = []
         await tweetsStore.fetchNewsFeed(1, 10, activeTab.value)
+    } catch (error) {
+        console.error('Error loading home page:', error)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((error as any).response?.status === 403) {
+            router.push('/verify-email')
+        }
     } finally {
         isInitialLoading.value = false
     }
