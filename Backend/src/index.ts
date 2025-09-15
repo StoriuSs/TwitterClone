@@ -15,7 +15,7 @@ import swaggerUi from 'swagger-ui-express'
 import YAML from 'yaml'
 import fs from 'fs'
 import searchRouter from './routes/search.routes'
-
+import './utils/s3'
 const app = express()
 // CORS
 app.use(

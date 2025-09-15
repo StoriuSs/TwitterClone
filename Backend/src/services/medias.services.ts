@@ -1,8 +1,8 @@
 import { Request } from 'express'
-import { handleUploadImage, handleUploadVideo, handleUploadVideoHLS } from '~/utils/file'
+import { getFilesFromDir, handleUploadImage, handleUploadVideo, handleUploadVideoHLS } from '~/utils/file'
 import sharp from 'sharp'
 import path from 'path'
-import { UPLOAD_IMAGE_DIR } from '~/constants/dir'
+import { UPLOAD_IMAGE_DIR, UPLOAD_VIDEO_DIR } from '~/constants/dir'
 import { HOST, NODE_ENV, PORT } from '~/configs/env.config'
 import fs from 'fs'
 import { EncodingStatus, MediaType } from '~/constants/enum'
@@ -10,7 +10,9 @@ import { Media } from '~/models/schemas/Media.schema'
 import { encodeHLSWithMultipleVideoStreams } from '~/utils/video'
 import databaseService from './database.services'
 import VideoStatus from '~/models/schemas/VideoStatus.schema'
-
+import { uploadFileToS3 } from '~/utils/s3'
+import mime from 'mime'
+import fsPromise from 'fs/promises'
 class Queue {
     items: string[]
     encoding: boolean
@@ -57,6 +59,22 @@ class Queue {
                 await encodeHLSWithMultipleVideoStreams(videoPath)
                 this.dequeue()
                 await fs.promises.unlink(videoPath)
+                const files = getFilesFromDir(path.resolve(UPLOAD_VIDEO_DIR, idName))
+                await Promise.all(
+                    files.map((filepath) => {
+                        const relativePath = filepath.replace(path.resolve(UPLOAD_VIDEO_DIR), '')
+                        const filename = `video-hls${relativePath}`.replace(/\\/g, '/')
+                        return uploadFileToS3({
+                            filename: filename,
+                            filepath: filepath,
+                            contentType: mime.getType(filepath) || 'application/vnd.apple.mpegurl'
+                        })
+                    })
+                )
+
+                // Clean up the HLS files and folder recursively
+                await fsPromise.rm(path.resolve(UPLOAD_VIDEO_DIR, idName), { recursive: true, force: true })
+
                 await databaseService.videoStatuses.updateOne(
                     { name: idName },
                     {
@@ -96,13 +114,17 @@ class MediasServices {
                 const newPath = path.join(UPLOAD_IMAGE_DIR, newName)
                 // Process with Sharp and save directly to uploads folder
                 await sharp(file.filepath).jpeg().toFile(newPath)
-                // Clean up temp file
-                fs.unlinkSync(file.filepath)
+                // Upload to S3
+                const S3Result = await uploadFileToS3({
+                    filename: 'images/' + newName,
+                    filepath: newPath,
+                    contentType: mime.getType(newPath) || 'image/jpeg'
+                })
+
+                // Clean up temp files
+                Promise.all([fsPromise.unlink(file.filepath), fsPromise.unlink(newPath)])
                 return {
-                    url:
-                        NODE_ENV === 'production'
-                            ? `${HOST}/static/image/${newName}`
-                            : `http://localhost:${PORT}/static/image/${newName}`,
+                    url: S3Result.Location as string,
                     type: MediaType.Image
                 }
             })
@@ -114,11 +136,14 @@ class MediasServices {
         const files = await handleUploadVideo(req)
         const result: Media[] = await Promise.all(
             files.map(async (file) => {
+                const S3Result = await uploadFileToS3({
+                    filename: 'videos/' + file.newFilename,
+                    filepath: file.filepath,
+                    contentType: mime.getType(file.filepath) || 'video/mp4'
+                })
+                fsPromise.unlink(file.filepath)
                 return {
-                    url:
-                        NODE_ENV === 'production'
-                            ? `${HOST}/static/video/${file.newFilename}`
-                            : `http://localhost:${PORT}/static/video/${file.newFilename}`,
+                    url: S3Result.Location as string,
                     type: MediaType.Video
                 }
             })
@@ -135,7 +160,7 @@ class MediasServices {
                     url:
                         NODE_ENV === 'production'
                             ? `${HOST}/static/video-hls/${file.newFilename}.m3u8`
-                            : `http://localhost:${PORT}/static/video-hls/${file.newFilename}.m3u8`,
+                            : `http://localhost:${PORT}/static/video-hls/${file.newFilename}/master.m3u8`,
                     type: MediaType.HLS
                 }
             })

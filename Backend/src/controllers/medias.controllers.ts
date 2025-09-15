@@ -6,6 +6,7 @@ import { userMessages } from '~/constants/messages'
 import mediasServices from '~/services/medias.services'
 import fs from 'fs'
 import mime from 'mime'
+import { serveFileFromS3 } from '~/utils/s3'
 
 export const uploadImageController = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -86,12 +87,7 @@ export const uploadVideoHLSController = async (req: Request, res: Response, next
 export const serveM3U8Controller = (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id } = req.params
-        const hlsPath = path.resolve(UPLOAD_VIDEO_DIR, id, 'master.m3u8')
-        return res.sendFile(hlsPath, (err) => {
-            if (err) {
-                next(err)
-            }
-        })
+        serveFileFromS3(res, `video-hls/${id}/master.m3u8`)
     } catch (error) {
         next(error)
     }
@@ -100,12 +96,7 @@ export const serveM3U8Controller = (req: Request, res: Response, next: NextFunct
 export const serveSegmentController = (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id, v, segment } = req.params
-        const hlsPath = path.resolve(UPLOAD_VIDEO_DIR, id, v, segment)
-        return res.sendFile(hlsPath, (err) => {
-            if (err) {
-                next(err)
-            }
-        })
+        serveFileFromS3(res, `video-hls/${id}/${v}/${segment}`)
     } catch (error) {
         next(error)
     }

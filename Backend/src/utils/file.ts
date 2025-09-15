@@ -127,3 +127,19 @@ export const handleUploadVideoHLS = async (req: Request) => {
         })
     })
 }
+
+export const getFilesFromDir = (dir: string, files: string[] = []) => {
+    const fileList = fs.readdirSync(dir)
+    for (const file of fileList) {
+        const name = `${dir}/${file}`
+        // check if the current file/directory is a directory
+        if (fs.statSync(name).isDirectory()) {
+            // if yes, recursively call the function to get all files in the directory
+            getFilesFromDir(name, files)
+        } else {
+            // if no, push the file name to the array
+            files.push(name)
+        }
+    }
+    return files
+}
