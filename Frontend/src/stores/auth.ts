@@ -219,6 +219,58 @@ export const useAuthStore = defineStore('auth', {
             }
         },
 
+        async forgotPassword(email: string) {
+            this.loading = true
+            this.error = null
+
+            try {
+                const response = await api.post('/users/forgot-password', { email })
+
+                return {
+                    success: true,
+                    data: response.data
+                }
+            } catch (error) {
+                console.error('Forgot password error:', error)
+                this.error = extractErrorMessage(error)
+
+                return {
+                    success: false,
+                    error: this.error
+                }
+            } finally {
+                this.loading = false
+            }
+        },
+
+        async resetPassword(forgotPasswordToken: string, password: string, confirmPassword: string) {
+            this.loading = true
+            this.error = null
+
+            try {
+                const response = await api.post('/users/reset-password', {
+                    forgot_password_token: forgotPasswordToken,
+                    password: password,
+                    confirm_password: confirmPassword
+                })
+
+                return {
+                    success: true,
+                    data: response.data
+                }
+            } catch (error) {
+                console.error('Reset password error:', error)
+                this.error = extractErrorMessage(error)
+
+                return {
+                    success: false,
+                    error: this.error
+                }
+            } finally {
+                this.loading = false
+            }
+        },
+
         clearError() {
             this.error = null
         }

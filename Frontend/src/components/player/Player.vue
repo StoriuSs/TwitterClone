@@ -6,7 +6,7 @@ import Hls from 'hls.js'
 const videoElement = ref<HTMLVideoElement | null>(null)
 
 // Video source
-const src = 'http://localhost:8888/static/video-hls/N3U3zwA-qUrjcN7MfwqQc/master.m3u8'
+const src = 'http://localhost:8888/static/video-hls/n1HF9sxxArqstOYvKVlQt/master.m3u8'
 
 onMounted(() => {
     if (!videoElement.value) return

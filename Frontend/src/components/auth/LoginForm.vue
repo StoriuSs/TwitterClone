@@ -218,7 +218,9 @@ const handleLogin = async () => {
                 </Button>
 
                 <div class="flex justify-between text-sm">
-                    <a href="#" class="text-blue-500 dark:text-blue-400 hover:underline">Forgot password?</a>
+                    <router-link to="/forgot-password" class="text-blue-500 dark:text-blue-400 hover:underline"
+                        >Forgot password?</router-link
+                    >
                     <router-link to="/signup" class="text-blue-500 dark:text-blue-400 hover:underline"
                         >Sign up for Kwitter</router-link
                     >

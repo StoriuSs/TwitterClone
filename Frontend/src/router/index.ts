@@ -8,6 +8,8 @@ import SignUpEmail from '@/components/auth/SignUpEmail.vue'
 import LoginForm from '@/components/auth/LoginForm.vue'
 import EmailVerification from '@/components/auth/EmailVerification.vue'
 import VerifyEmailToken from '../components/auth/VerifyEmailToken.vue'
+import ForgotPassword from '@/components/auth/ForgotPassword.vue'
+import ResetPassword from '@/components/auth/ResetPassword.vue'
 import { useAuthStore } from '@/stores/auth'
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -42,6 +44,16 @@ const router = createRouter({
             path: '/email-verify',
             name: 'email-verify-token',
             component: VerifyEmailToken
+        },
+        {
+            path: '/forgot-password',
+            name: 'forgot-password',
+            component: ForgotPassword
+        },
+        {
+            path: '/reset-password',
+            name: 'reset-password',
+            component: ResetPassword
         },
         // App routes (with layout)
         {

@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTweetsStore } from '@/stores/tweets'
 import { useAuthStore } from '@/stores/auth'
-
+import Player from '@/components/player/Player.vue'
 import ComposeTweet from '@/components/tweets/ComposeTweet.vue'
 import TweetList from '@/components/tweets/TweetList.vue'
 
@@ -126,6 +126,7 @@ const handleTweetPosted = async () => {
 
     <!-- Tweet List -->
     <div class="divide-y divide-gray-200 dark:divide-gray-800">
+        <Player />
         <TweetList
             :tweets="tweetsStore.tweets"
             :loading="tweetsStore.loading || isInitialLoading"
