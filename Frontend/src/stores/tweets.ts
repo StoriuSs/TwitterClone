@@ -55,13 +55,11 @@ export const useTweetsStore = defineStore('tweets', {
             this.error = null
 
             try {
-                await api.post('/tweets', tweetData)
-
-                // Refresh the news feed after posting
-                await this.fetchNewsFeed(1)
+                const response = await api.post('/tweets', tweetData)
 
                 return {
-                    success: true
+                    success: true,
+                    message: response.data.message || 'Tweet created successfully'
                 }
             } catch (error) {
                 console.error('Error creating tweet:', error)

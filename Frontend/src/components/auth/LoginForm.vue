@@ -21,6 +21,7 @@ const router = useRouter()
 
 const handleLogin = async () => {
     error.value = ''
+
     const res = await authStore.login({ email: email.value, password: password.value })
     if (res.success) {
         await authStore.getUserInfo()

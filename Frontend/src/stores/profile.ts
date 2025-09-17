@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import api from '@/lib/api'
+import { useToast } from '@/composables/useToast'
 import type { ProfileState } from '@/interfaces/profile.interface'
 import { extractErrorMessage } from '@/interfaces/error.interface'
 
@@ -57,6 +58,7 @@ export const useProfileStore = defineStore('profile', {
         },
 
         async followUser(userId: string) {
+            const toast = useToast()
             try {
                 const response = await api.post('/users/follow', {
                     followed_user_id: userId
@@ -64,6 +66,9 @@ export const useProfileStore = defineStore('profile', {
 
                 this.isFollowing = true
                 this.followersCount += 1
+
+                // Show success toast
+                toast.successFromResponse(response.data, 'User followed!')
 
                 return {
                     success: true,
@@ -73,6 +78,9 @@ export const useProfileStore = defineStore('profile', {
                 console.error('Error following user:', error)
                 this.error = extractErrorMessage(error)
 
+                // Show error toast
+                toast.errorFromResponse(error, 'Failed to follow user')
+
                 return {
                     success: false,
                     error: this.error
@@ -81,11 +89,15 @@ export const useProfileStore = defineStore('profile', {
         },
 
         async unfollowUser(userId: string) {
+            const toast = useToast()
             try {
                 const response = await api.delete(`/users/follow/${userId}`)
 
                 this.isFollowing = false
                 this.followersCount = Math.max(0, this.followersCount - 1)
+
+                // Show success toast
+                toast.successFromResponse(response.data, 'User unfollowed!')
 
                 return {
                     success: true,
@@ -94,6 +106,9 @@ export const useProfileStore = defineStore('profile', {
             } catch (error) {
                 console.error('Error unfollowing user:', error)
                 this.error = extractErrorMessage(error)
+
+                // Show error toast
+                toast.errorFromResponse(error, 'Failed to unfollow user')
 
                 return {
                     success: false,

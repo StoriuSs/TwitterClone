@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useTweetsStore } from '@/stores/tweets'
+import { showSuccessToast, showErrorToast } from '@/utils/toast'
 import Button from '@/components/ui/button/Button.vue'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Image, Smile, Calendar, MapPin } from 'lucide-vue-next'
@@ -110,7 +111,7 @@ const postTweet = async () => {
                 mediaIds = selectedImages.value.map((_, i) => `image_${Date.now()}_${i}`)
             }
 
-            await tweetsStore.createTweet({
+            const result = await tweetsStore.createTweet({
                 content: tweetContent.value,
                 hashtags: processedHashtags,
                 mentions: processedMentions,
@@ -119,17 +120,25 @@ const postTweet = async () => {
                 audience: 0 // Everyone
             })
 
-            // Reset form
-            tweetContent.value = ''
-            selectedImages.value = []
-            imageURLs.value.forEach((url) => URL.revokeObjectURL(url))
-            imageURLs.value = []
+            if (result.success) {
+                // Reset form
+                tweetContent.value = ''
+                selectedImages.value = []
+                imageURLs.value.forEach((url) => URL.revokeObjectURL(url))
+                imageURLs.value = []
 
-            if (props.closeModal) {
-                props.closeModal()
+                if (props.closeModal) {
+                    props.closeModal()
+                }
+
+                emit('tweetPosted')
+
+                // Show success toast AFTER everything is complete
+                showSuccessToast(result.message || 'Tweet created successfully')
+            } else {
+                // Show error toast
+                showErrorToast(result.error || 'Failed to post tweet')
             }
-
-            emit('tweetPosted')
         } catch (error) {
             console.error('Error posting tweet:', error)
         } finally {

@@ -1,5 +1,11 @@
 import { defineStore } from 'pinia'
 import api from '@/lib/api'
+import {
+    showSuccessToast,
+    showErrorToast,
+    extractSuccessMessage,
+    extractErrorMessage as extractToastErrorMessage
+} from '@/utils/toast'
 import type {
     UserRegistrationDataType,
     UserLoginDataType,
@@ -7,6 +13,7 @@ import type {
     UpdateProfileDataType
 } from '@/interfaces/auth.interface'
 import { extractErrorMessage } from '@/interfaces/error.interface'
+import { useToast } from '@/composables/useToast'
 
 export const useAuthStore = defineStore('auth', {
     state: (): AuthStateType => ({
@@ -38,6 +45,9 @@ export const useAuthStore = defineStore('auth', {
 
                 await this.getUserInfo()
 
+                // Show success toast
+                showSuccessToast(extractSuccessMessage(response.data, 'Account created successfully!'))
+
                 return {
                     success: true,
                     data: response.data
@@ -47,6 +57,9 @@ export const useAuthStore = defineStore('auth', {
 
                 // Use the utility function to extract the error message
                 this.error = extractErrorMessage(error)
+
+                // Show error toast
+                showErrorToast(extractToastErrorMessage(error, 'Failed to create account'))
 
                 return {
                     success: false,
@@ -72,6 +85,9 @@ export const useAuthStore = defineStore('auth', {
                 // Store access token in localStorage
                 localStorage.setItem('access_token', access_token)
 
+                // Show success toast
+                showSuccessToast(extractSuccessMessage(response.data, 'Welcome back!'))
+
                 return {
                     success: true,
                     data: response.data
@@ -81,6 +97,9 @@ export const useAuthStore = defineStore('auth', {
 
                 // Use the utility function to extract the error message
                 this.error = extractErrorMessage(error)
+
+                // Show error toast
+                showErrorToast(extractToastErrorMessage(error, 'Failed to login'))
 
                 return {
                     success: false,
@@ -143,9 +162,15 @@ export const useAuthStore = defineStore('auth', {
                 if (this.accessToken) {
                     await api.post('/users/logout', {})
                 }
+
+                // Show success toast after successful logout
+                showSuccessToast('Logged out successfully')
             } catch (error) {
                 console.error('Logout error:', error)
                 this.error = extractErrorMessage(error)
+
+                // Show error toast but still continue with logout
+                showErrorToast("Logout error, but you're still logged out")
             } finally {
                 // Clear state and local storage regardless of API call success
                 this.user = null
@@ -163,6 +188,7 @@ export const useAuthStore = defineStore('auth', {
         },
 
         async verifyEmail(emailVerifyToken: string) {
+            const toast = useToast()
             this.loading = true
             this.error = null
 
@@ -178,6 +204,9 @@ export const useAuthStore = defineStore('auth', {
                 await this.getUserInfo()
                 localStorage.removeItem('emailVerifyToken')
 
+                // Show success toast
+                toast.successFromResponse(response.data, 'Email verified successfully!')
+
                 return {
                     success: true,
                     data: response.data
@@ -185,6 +214,9 @@ export const useAuthStore = defineStore('auth', {
             } catch (error) {
                 console.error('Email verification error:', error)
                 this.error = extractErrorMessage(error)
+
+                // Show error toast
+                toast.errorFromResponse(error, 'Email verification failed')
 
                 return {
                     success: false,
@@ -196,11 +228,15 @@ export const useAuthStore = defineStore('auth', {
         },
 
         async resendVerificationEmail() {
+            const toast = useToast()
             this.loading = true
             this.error = null
 
             try {
                 const response = await api.post('/users/resend-verify-email', {})
+
+                // Show success toast
+                toast.successFromResponse(response.data, 'Verification email sent!')
 
                 return {
                     success: true,
@@ -209,6 +245,9 @@ export const useAuthStore = defineStore('auth', {
             } catch (error) {
                 console.error('Resend verification error:', error)
                 this.error = extractErrorMessage(error)
+
+                // Show error toast
+                toast.errorFromResponse(error, 'Failed to resend verification email')
 
                 return {
                     success: false,
@@ -220,11 +259,15 @@ export const useAuthStore = defineStore('auth', {
         },
 
         async forgotPassword(email: string) {
+            const toast = useToast()
             this.loading = true
             this.error = null
 
             try {
                 const response = await api.post('/users/forgot-password', { email })
+
+                // Show success toast
+                toast.successFromResponse(response.data, 'Password reset email sent!')
 
                 return {
                     success: true,
@@ -233,6 +276,9 @@ export const useAuthStore = defineStore('auth', {
             } catch (error) {
                 console.error('Forgot password error:', error)
                 this.error = extractErrorMessage(error)
+
+                // Show error toast
+                toast.errorFromResponse(error, 'Failed to send password reset email')
 
                 return {
                     success: false,
@@ -244,6 +290,7 @@ export const useAuthStore = defineStore('auth', {
         },
 
         async resetPassword(forgotPasswordToken: string, password: string, confirmPassword: string) {
+            const toast = useToast()
             this.loading = true
             this.error = null
 
@@ -254,6 +301,9 @@ export const useAuthStore = defineStore('auth', {
                     confirm_password: confirmPassword
                 })
 
+                // Show success toast
+                toast.successFromResponse(response.data, 'Password reset successfully!')
+
                 return {
                     success: true,
                     data: response.data
@@ -261,6 +311,9 @@ export const useAuthStore = defineStore('auth', {
             } catch (error) {
                 console.error('Reset password error:', error)
                 this.error = extractErrorMessage(error)
+
+                // Show error toast
+                toast.errorFromResponse(error, 'Failed to reset password')
 
                 return {
                     success: false,
