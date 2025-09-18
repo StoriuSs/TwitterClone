@@ -2,7 +2,7 @@ import axios from 'axios'
 
 // Create an axios instance with base configuration
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL,
+    baseURL: import.meta.env.VITE_API_URL + '/api',
     headers: {
         'Content-Type': 'application/json'
     },
@@ -39,7 +39,7 @@ api.interceptors.response.use(
                 // With HTTP-only cookies, we don't need to send the refresh token manually
                 // The cookie will be sent automatically with the request
                 const response = await axios.post(
-                    import.meta.env.VITE_API_URL + '/users/refresh-token',
+                    import.meta.env.VITE_API_URL + '/api/users/refresh-token',
                     {},
                     { withCredentials: true }
                 )

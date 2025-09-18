@@ -11,6 +11,7 @@ import VerifyEmailToken from '../components/auth/VerifyEmailToken.vue'
 import ForgotPassword from '@/components/auth/ForgotPassword.vue'
 import ResetPassword from '@/components/auth/ResetPassword.vue'
 import { useAuthStore } from '@/stores/auth'
+import Chat from '@/components/pages/Chat.vue'
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
     routes: [
@@ -69,6 +70,11 @@ const router = createRouter({
                     path: '/profile/:username',
                     name: 'profile',
                     component: ProfilePage
+                },
+                {
+                    path: '/chat',
+                    name: 'chat',
+                    component: Chat
                 }
             ]
         }

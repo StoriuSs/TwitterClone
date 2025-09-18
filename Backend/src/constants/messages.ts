@@ -74,7 +74,9 @@ export const userMessages = {
     gmailNotVerified: 'Gmail account is not verified',
     uploadSuccess: 'File uploaded successfully',
     videoStatusFound: 'Video status found',
-    videoStatusNotFound: 'Video status not found'
+    videoStatusNotFound: 'Video status not found',
+    messagesRetrieved: 'Messages retrieved successfully',
+    recipientIdRequired: 'Recipient ID is required'
 }
 
 export const tweetMessages = {

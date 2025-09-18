@@ -8,6 +8,7 @@ import Tweet from '~/models/schemas/Tweet.schema'
 import Hashtag from '~/models/schemas/Hashtag.schema'
 import Bookmark from '~/models/schemas/Bookmark.schema'
 import Like from '~/models/schemas/Like.schema'
+import Message from '~/models/schemas/Message.schema'
 const uri = MONGODB_URI
 
 class DatabaseService {
@@ -138,6 +139,10 @@ class DatabaseService {
 
     get likes(): Collection<Like> {
         return this.db.collection('likes')
+    }
+
+    get messages(): Collection<Message> {
+        return this.db.collection('messages')
     }
 }
 

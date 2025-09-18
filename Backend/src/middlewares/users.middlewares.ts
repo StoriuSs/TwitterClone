@@ -544,3 +544,14 @@ export const isUserLoggedInValidator = (middleware: any) => {
         return middleware(req, res, next)
     }
 }
+
+export const getMessagesValidator = validate(
+    checkSchema({
+        recipientId: {
+            in: ['params'],
+            notEmpty: {
+                errorMessage: userMessages.recipientIdRequired
+            }
+        }
+    })
+)
