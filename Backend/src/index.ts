@@ -1,5 +1,5 @@
 import express from 'express'
-import { HOST, NODE_ENV, CLIENT_PORT, PORT } from './configs/env.config'
+import { HOST, NODE_ENV, CLIENT_PORT, PORT, JWT_ACCESS_TOKEN_SECRET_KEY } from './configs/env.config'
 import databaseService from './services/database.services'
 import usersRouter from '~/routes/users.routes'
 import { errorHandler } from './middlewares/errors.middlewares'
@@ -20,6 +20,7 @@ import { Server } from 'socket.io'
 import Message from './models/schemas/Message.schema'
 import messageRouter from './routes/message.routes'
 import { ObjectId } from 'mongodb'
+import { verifyToken } from './utils/jwt'
 
 const app = express()
 // CORS
@@ -69,6 +70,21 @@ const io = new Server(httpServer, {
 })
 // Map to store userId and their corresponding socket.id
 const users = new Map<string, string>()
+
+io.use((socket, next) => {
+    const access_token = socket.handshake.auth.token
+    try {
+        verifyToken(access_token, JWT_ACCESS_TOKEN_SECRET_KEY as string)
+        next()
+    } catch (error) {
+        return next({
+            message: 'Authentication error',
+            name: 'UnauthorizedError',
+            data: error
+        })
+    }
+})
+
 io.on('connection', (socket) => {
     console.log('user connected: ' + socket.id)
     const user_id = socket.handshake.auth.userId
